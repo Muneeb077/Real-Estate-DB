@@ -1,0 +1,368 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Agent Main Page</title>
+    <style>
+        body {
+            font-family: 'Roboto', Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background: url('/static/HandShake.jpg') no-repeat center center fixed;
+            background-size: cover;
+            color: #333;
+            /* Add a darker overlay to the background image */
+            position: relative;
+        }
+
+        body::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.2); /* Dark overlay */
+            z-index: -1;
+        }
+
+        .container {
+            display: flex;
+        }
+
+        .filter {
+            background: rgba(255, 255, 255, 0.50); /* Semi-transparent white */
+            padding: 20px;
+            width: 20%;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+            border-radius: 8px;
+        }
+
+        .filter h2 {
+            margin-top: 0;
+            color: #1c7430; /* Darker green */
+        }
+
+        .filter label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+
+        .filter input {
+            width: 90%;
+            padding: 8px;
+            margin-bottom: 15px;
+            border: 1px solid #ccc;
+            border-radius: 6px;
+            font-size: 14px;
+        }
+
+        .filter button, .filter .add-property-btn {
+            background-color: #1c7430; /* Darker green */
+            color: white;
+            padding: 10px;
+            border: none;
+            cursor: pointer;
+            width: 100%;
+            border-radius: 6px;
+            font-size: 14px;
+            transition: background-color 0.3s ease;
+        }
+
+        .filter button:hover, .filter .add-property-btn:hover {
+            background-color: #145623; /* Even darker green on hover */
+        }
+
+        .main-content {
+            width: 80%;
+            padding: 20px;
+            background: rgba(255, 255, 255, 0.95); /* Slightly transparent white */
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+            border-radius: 8px;
+        }
+
+        .main-content table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+
+        .main-content th, .main-content td {
+            border: 1px solid #ddd;
+            padding: 10px;
+            text-align: left;
+        }
+
+        .main-content th {
+            background-color: #1c7430; /* Darker green header */
+            color: white;
+        }
+
+        .main-content tr:nth-child(even) {
+            background-color: #f9f9f9;
+        }
+
+        .main-content tr:hover {
+            background-color: #d7ffd9;
+        }
+
+        a {
+            text-decoration: none;
+            color: white;
+            font-weight: bold;
+            background-color: #1c7430; /* Darker green button */
+            padding: 10px 15px;
+            border-radius: 6px;
+            float: right;
+            transition: background-color 0.3s ease;
+        }
+
+        a:hover {
+            background-color: #145623; /* Even darker green */
+        }
+
+        /* Modal Styles */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.6); /* Dark background overlay */
+            justify-content: center;
+            align-items: center;
+            animation: fadeIn 0.3s ease;
+        }
+
+        .modal-content {
+            background: #ffffff;
+            padding: 20px;
+            border-radius: 8px;
+            width: 400px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+        }
+
+        .modal-header {
+            font-size: 20px;
+            font-weight: bold;
+            margin-bottom: 15px;
+            color: #1c7430; /* Darker green modal header */
+        }
+
+        .modal input, .modal select {
+            width: 100%;
+            padding: 10px;
+            margin-bottom: 15px;
+            border: 1px solid #ccc;
+            border-radius: 6px;
+            font-size: 14px;
+        }
+
+        .modal button {
+            background-color: #1c7430; /* Darker green buttons */
+            color: white;
+            border: none;
+            padding: 10px 15px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: background-color 0.3s ease;
+        }
+
+        .modal button:hover {
+            background-color: #145623; /* Even darker green */
+        }
+
+        .close-btn {
+            background-color: #ff4d4d;
+        }
+
+        .close-btn:hover {
+            background-color: #cc0000;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+            }
+            to {
+                opacity: 1;
+            }
+        }
+
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Filter Section -->
+        <div class="filter">
+            <h2>Filter</h2>
+            <form method="POST">
+                <label for="price_min">Price</label>
+                <input type="number" name="price_min" id="price_min" placeholder="Min">
+                <input type="number" name="price_max" id="price_max" placeholder="Max">
+
+                <label for="size_min">Size</label>
+                <input type="number" name="size_min" id="size_min" placeholder="Min">
+                <input type="number" name="size_max" id="size_max" placeholder="Max">
+
+                <label for="property_type">Property Type</label>
+                <input type="text" name="property_type" id="property_type" placeholder="e.g., Apartment">
+
+                <button type="submit">Submit</button>
+            </form>
+            <button class="add-property-btn" onclick="openModal()">Add Property</button>
+        </div>
+
+        <!-- Main Content Section -->
+        <div class="main-content">
+            <a href="{{ url_for('agent_logout') }}">Logout</a>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Property ID</th>
+                        <th>Property Type</th>
+                        <th>Property Size</th>
+                        <th>Property Price</th>
+                        <th>Property Status</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% if properties %}
+                        {% for property in properties %}
+                            <tr>
+                                <td>{{ property.p_id }}</td>
+                                <td>{{ property.p_type }}</td>
+                                <td>{{ property.p_size }}</td>
+                                <td>${{ property.p_price }}</td>
+                                <td>{{ property.p_status }}</td>
+                                <td>
+                                    <button onclick="openModifyModal('{{ property.p_id }}', '{{ property.p_type }}', {{ property.p_price }})">
+                                        Modify
+                                    </button>
+                                    {% if property.p_status == 'available' %}
+                                        <button onclick="openSellModal('{{ property.p_id }}', '{{ property.p_price }}')">Sell</button>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                        {% endfor %}
+                    {% else %}
+                        <tr>
+                            <td colspan="6">No properties available</td>
+                        </tr>
+                    {% endif %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Modal for Adding Property -->
+    <div id="addPropertyModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">Add Property</div>
+            <form method="POST" action="{{ url_for('add_property') }}">
+                <label for="p_type">Property Type</label>
+                <input type="text" name="p_type" id="p_type" required>
+
+                <label for="p_size">Property Size</label>
+                <input type="number" name="p_size" id="p_size" required>
+
+                <label for="p_price">Property Price</label>
+                <input type="number" name="p_price" id="p_price" required>
+
+                <label for="p_status">Property Status</label>
+                <select name="p_status" id="p_status" required>
+                    <option value="available">Available</option>
+                    <option value="sold">Sold</option>
+                </select>
+
+                <div style="text-align: right;">
+                    <button type="submit">Add Property</button>
+                    <button type="button" class="close-btn" onclick="closeModal()">Cancel</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Modal for Modifying Property -->
+    <div id="modifyPropertyModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">Modify Property</div>
+            <form method="POST" action="{{ url_for('modify_property') }}">
+                <input type="hidden" name="p_id" id="modify_p_id">
+
+                <label for="modify_p_type">Property Type</label>
+                <input type="text" name="p_type" id="modify_p_type" required>
+
+                <label for="modify_p_price">Property Price</label>
+                <input type="number" name="p_price" id="modify_p_price" required>
+
+                <div style="text-align: right;">
+                    <button type="submit">Save Changes</button>
+                    <button type="button" class="close-btn" onclick="closeModifyModal()">Cancel</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+        <!-- Modal for Selling Property -->
+    <div id="sellPropertyModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">Sell Property</div>
+            <form method="POST" action="{{ url_for('sell_property') }}">
+                <input type="hidden" name="p_id" id="sell_p_id">
+
+                <label for="sell_price">Selling Price</label>
+                <input type="number" name="selling_price" id="sell_price" required>
+
+                <label for="client_username">Client Username</label>
+                <input type="text" name="client_username" id="client_username" required>
+
+                <div style="text-align: right;">
+                    <button type="submit">Sell</button>
+                    <button type="button" class="close-btn" onclick="closeSellModal()">Cancel</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        function openModal() {
+            document.getElementById('addPropertyModal').style.display = 'flex';
+        }
+
+        function closeModal() {
+            document.getElementById('addPropertyModal').style.display = 'none';
+        }
+
+        function openModifyModal(p_id, p_type, p_price) {
+            // Populate the modal fields
+            document.getElementById('modify_p_id').value = p_id;
+            document.getElementById('modify_p_type').value = p_type;
+            document.getElementById('modify_p_price').value = p_price;
+
+            // Display the modify modal
+            document.getElementById('modifyPropertyModal').style.display = 'flex';
+        }
+
+        function closeModifyModal() {
+            // Hide the modify modal
+            document.getElementById('modifyPropertyModal').style.display = 'none';
+        }
+
+        function openSellModal(p_id, price) {
+            document.getElementById('sell_p_id').value = p_id;
+            document.getElementById('sell_price').value = price;
+            document.getElementById('sellPropertyModal').style.display = 'flex';
+        }
+
+        function closeSellModal() {
+            document.getElementById('sellPropertyModal').style.display = 'none';
+        }
+    </script>
+</body>
+</html>

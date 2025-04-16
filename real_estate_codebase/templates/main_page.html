@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Main Page</title>
+    <style>
+        /* Reset default margins and paddings */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            font-family: 'Arial', sans-serif;
+            background-image: url('/static/Real Estate.avif');
+            background-size: cover;
+            background-position: center;
+            background-repeat: no-repeat;
+            color: #333;
+        }
+
+        /* Taskbar styling */
+        .taskbar {
+            background-color: rgba(255, 255, 255, 0.9);
+            height: 60px;
+            display: flex;
+            justify-content: flex-end;
+            align-items: center;
+            padding: 0 30px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15);
+            position: fixed;
+            width: 100%;
+            z-index: 10;
+        }
+
+        .taskbar button, .taskbar a {
+            padding: 10px 25px;
+            margin-left: 15px;
+            border: none;
+            border-radius: 5px;
+            font-size: 14px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease-in-out;
+            text-decoration: none;
+        }
+
+        .login-button {
+            background-color: #FF914D;
+            color: #fff;
+        }
+
+        .login-button:hover {
+            background-color: #D37437;
+        }
+
+        .download-button {
+            background-color: #007BFF;
+            color: white;
+        }
+
+        .download-button:hover {
+            background-color: #0056b3;
+        }
+
+        /* Centered image styling */
+        .image-container {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            padding-top: 60px; /* Space for fixed taskbar */
+        }
+
+        .image-container img {
+            max-width: 90%;
+            height: auto;
+            border-radius: 10px;
+            box-shadow: 0 6px 15px rgba(0, 0, 0, 0.2);
+        }
+    </style>
+</head>
+<body>
+    <div class="taskbar">
+        <button class="login-button" onclick="window.location.href='/login'">Login</button>
+        <a href="{{ url_for('backup_database') }}" class="download-button">Download Backup</a>
+    </div>
+    <div class="image-container">
+        <img src="/static/Real Estate.avif" alt="Real Estate">
+    </div>
+</body>
+</html>

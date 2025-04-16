@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Client Main Menu</title>
+    <style>
+        body {
+            font-family: 'Roboto', Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background: url('/static/Building.jpg') no-repeat center center fixed;
+            background-size: cover;
+            color: #333;
+            position: relative;
+        }
+
+        body::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5); /* Dark overlay */
+            z-index: -1;
+        }
+
+        .container {
+            display: flex;
+            margin: 20px;
+            border-radius: 10px;
+            background: rgba(255, 255, 255, 0.9); /* Slightly transparent white */
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+        }
+
+        .filter-section {
+            padding: 20px;
+            width: 25%;
+            background: rgba(240, 240, 240, 0.95); /* Slightly transparent light gray */
+            border-radius: 10px;
+            margin-right: 20px;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.15);
+        }
+
+        .filter-section h2 {
+            color: #1b5e20; /* Darker green */
+            margin-bottom: 15px;
+            font-size: 20px;
+            text-align: center;
+        }
+
+        .filter-section label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+            color: #333;
+        }
+
+        .filter-section input[type="text"] {
+            width: 100%;
+            padding: 10px;
+            margin-bottom: 15px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            font-size: 14px;
+        }
+
+        .filter-section input[type="submit"] {
+            width: 100%;
+            padding: 10px;
+            background-color: #1b5e20; /* Darker green */
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: 0.3s ease;
+        }
+
+        .filter-section input[type="submit"]:hover {
+            background-color: #0d4220; /* Even darker green */
+        }
+
+        .property-section {
+            width: 75%;
+            padding: 20px;
+            background: rgba(255, 255, 255, 0.95); /* Slightly transparent white */
+            border-radius: 10px;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.15);
+        }
+
+        .property-section h2 {
+            color: #1b5e20; /* Darker green */
+            margin-bottom: 20px;
+            font-size: 22px;
+            text-align: center;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 10px;
+        }
+
+        table th, table td {
+            text-align: left;
+            padding: 10px;
+            border: 1px solid #ddd;
+            font-size: 14px;
+        }
+
+        table th {
+            background-color: #1b5e20; /* Darker green for header */
+            color: white;
+            text-align: center;
+            font-weight: bold;
+        }
+
+        table td {
+            color: #333;
+            text-align: center;
+        }
+
+        table tr:nth-child(even) {
+            background-color: #f9f9f9;
+        }
+
+        table tr:hover {
+            background-color: #d7ffd9; /* Light green hover effect */
+        }
+
+        .logout-section {
+            text-align: right;
+            padding: 10px;
+            margin-bottom: 20px;
+        }
+
+        .logout-section a {
+            text-decoration: none;
+            background-color: #1b5e20; /* Darker green */
+            color: white;
+            padding: 10px 15px;
+            border-radius: 5px;
+            font-size: 14px;
+            transition: 0.3s ease;
+            font-weight: bold;
+        }
+
+        .logout-section a:hover {
+            background-color: #0d4220; /* Even darker green */
+        }
+
+    </style>
+</head>
+<body>
+    <div class="logout-section">
+        <a href="/client_logout">Logout</a>
+    </div>
+    <div class="container">
+        <div class="filter-section">
+            <h2>Filter</h2>
+            <form method="GET" action="/client_mainpage">
+                <label for="price">Price:</label><br>
+                <input type="text" name="price_min" placeholder="Min">
+                <input type="text" name="price_max" placeholder="Max"><br>
+
+                <label for="size">Size:</label><br>
+                <input type="text" name="size_min" placeholder="Min">
+                <input type="text" name="size_max" placeholder="Max"><br>
+
+                <label for="property_type">Property Type:</label><br>
+                <input type="text" name="property_type" placeholder="Type"><br>
+
+                <input type="submit" value="Submit">
+            </form>
+        </div>
+        <div class="property-section">
+            <h2>Available Properties</h2>
+            <table>
+                <thead>
+                    <tr>
+                        <th>property ID</th>
+                        <th>Property type</th>
+                        <th>Property size</th>
+                        <th>Property price</th>
+                        <th>Property status</th>
+                        <th>Agent ID</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% if properties %}
+                        {% for property in properties %}
+                        <tr>
+                            <td>{{ property.p_id }}</td>
+                            <td>{{ property.p_type }}</td>
+                            <td>{{ property.p_size }}</td>
+                            <td>{{ property.p_price }}</td>
+                            <td>{{ property.p_status }}</td>
+                            <td>{{property.agent_id }}</td>
+                        </tr>
+                        {% endfor %}
+                    {% else %}
+                        <tr>
+                            <td colspan="5">No properties found matching the criteria.</td>
+                        </tr>
+                    {% endif %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</body>
+</html>
