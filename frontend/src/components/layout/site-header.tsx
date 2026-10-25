@@ -3,6 +3,7 @@ import Link from "next/link";
 
 import { ThemeToggle } from "./theme-toggle";
 import { UserMenu } from "./user-menu";
+import { VerifyBanner } from "./verify-banner";
 
 export function SiteHeader() {
   return (
@@ -28,6 +29,7 @@ export function SiteHeader() {
           <UserMenu />
         </div>
       </div>
+      <VerifyBanner />
     </header>
   );
 }

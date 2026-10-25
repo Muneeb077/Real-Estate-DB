@@ -63,10 +63,9 @@ def issue_refresh_token(user_id, mfa, user_agent=None, ip=None, family_id=None, 
     token = secrets.token_urlsafe(32)
     db.execute(
         """INSERT INTO refresh_tokens (user_id, family_id, token_hash, mfa, user_agent, ip, expires_at)
-           VALUES (:u, :f, :h, :m, :ua, :ip, :exp)""",
+           VALUES (:u, :f, :h, :m, :ua, :ip, NOW() + INTERVAL :days DAY)""",
         {"u": user_id, "f": family_id or str(ULID()), "h": sha256(token), "m": mfa,
-         "ua": (user_agent or "")[:255], "ip": ip,
-         "exp": _now() + timedelta(days=current_app.config["REFRESH_TTL_DAYS"])},
+         "ua": (user_agent or "")[:255], "ip": ip, "days": current_app.config["REFRESH_TTL_DAYS"]},
         conn=conn,
     )
     return token
@@ -77,7 +76,7 @@ def rotate_refresh_token(token, user_agent=None, ip=None):
     Returns (user_id, mfa, new_token) or None. Reuse of a rotated token revokes the family.
     """
     with db.transaction() as conn:
-        row = db.one("SELECT * FROM refresh_tokens WHERE token_hash = :h FOR UPDATE",
+        row = db.one("SELECT *, expires_at > NOW() AS live FROM refresh_tokens WHERE token_hash = :h FOR UPDATE",
                      {"h": sha256(token)}, conn=conn)
         if not row:
             return None
@@ -85,7 +84,7 @@ def rotate_refresh_token(token, user_agent=None, ip=None):
             db.execute("UPDATE refresh_tokens SET revoked_at = NOW() WHERE family_id = :f AND revoked_at IS NULL",
                        {"f": row["family_id"]}, conn=conn)
             return None
-        if datetime.fromisoformat(row["expires_at"]).replace(tzinfo=timezone.utc) < _now():
+        if not row["live"]:
             return None
         db.execute("UPDATE refresh_tokens SET revoked_at = NOW() WHERE id = :id", {"id": row["id"]}, conn=conn)
         new = issue_refresh_token(row["user_id"], bool(row["mfa"]), user_agent, ip, row["family_id"], conn=conn)
