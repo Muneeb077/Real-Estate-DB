@@ -4,7 +4,8 @@ export function money(amount: number, currency = "USD", compact = false) {
   return new Intl.NumberFormat("en-US", {
     style: "currency",
     currency,
-    maximumFractionDigits: amount >= 1000 || compact ? 0 : 2,
+    minimumFractionDigits: Number.isInteger(amount) ? 0 : 2,
+    maximumFractionDigits: Number.isInteger(amount) || compact ? 0 : 2,
     notation: compact && amount >= 100000 ? "compact" : "standard",
   }).format(amount);
 }

@@ -12,4 +12,7 @@ def healthcheck():
 
 
 def register_blueprints(app):
+    from . import listings
+
     app.register_blueprint(health)
+    app.register_blueprint(listings.bp)

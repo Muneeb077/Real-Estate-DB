@@ -2,7 +2,7 @@ import type { NextConfig } from "next";
 
 // The browser only ever talks to this origin: /api and /media are proxied to Flask,
 // so auth cookies are first-party and SameSite works without CORS.
-const API_ORIGIN = process.env.API_INTERNAL_URL ?? "http://127.0.0.1:5000";
+const API_ORIGIN = process.env.API_INTERNAL_URL ?? "http://127.0.0.1:5050";
 
 const securityHeaders = [
   { key: "X-Frame-Options", value: "DENY" },

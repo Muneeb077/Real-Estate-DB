@@ -1,0 +1,34 @@
+-- The only listing source the public API reads from: published, not deleted,
+-- and without private columns. Coordinates are rounded to 3 decimals (~100 m)
+-- so the exact address is never exposed. address_id is kept for spatial joins
+-- inside SearchListings and is never returned by the API.
+CREATE OR REPLACE SQL SECURITY INVOKER VIEW v_public_listings AS
+SELECT
+    l.id,
+    l.public_id,
+    l.title,
+    l.listing_mode,
+    l.property_type,
+    l.bedrooms,
+    l.bathrooms,
+    l.max_guests,
+    l.size_sqft,
+    l.price,
+    l.currency,
+    l.price_unit,
+    l.city,
+    a.state,
+    a.country,
+    ROUND(ST_Latitude(a.location), 3)  AS lat,
+    ROUND(ST_Longitude(a.location), 3) AS lng,
+    (SELECT p.url FROM listing_photos p WHERE p.listing_id = l.id ORDER BY p.sort_order, p.id LIMIT 1) AS cover_url,
+    (SELECT p.thumb_url FROM listing_photos p WHERE p.listing_id = l.id ORDER BY p.sort_order, p.id LIMIT 1) AS cover_thumb_url,
+    s.rating_avg,
+    COALESCE(s.review_count, 0) AS review_count,
+    l.published_at,
+    l.host_id,
+    l.address_id
+FROM listings l
+JOIN addresses a ON a.id = l.address_id
+LEFT JOIN listing_stats s ON s.listing_id = l.id
+WHERE l.status = 'published' AND l.deleted_at IS NULL;

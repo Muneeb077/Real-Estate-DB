@@ -98,11 +98,11 @@ def make_listing(row, host_id, address_id, idx):
         # The legacy schema had one "rent" type: split it into the two rental modes.
         if random.random() < 0.55:
             mode, unit = "short_term_stay", "night"
-            price = round(max(45, min(1200, (legacy_price / 4500) * factor * random.uniform(0.6, 1.3))))
+            price = round(random.uniform(55, 320) * factor * (1 + beds * 0.15))
             guests = max(1, min(16, beds * 2 + random.choice([0, 0, 1, 2])))
         else:
             mode, unit = "long_term_rent", "month"
-            price = round(max(700, min(25000, (legacy_price / 180) * factor * random.uniform(0.6, 1.2))), -1)
+            price = round(random.uniform(900, 2600) * factor * (1 + beds * 0.25), -1)
             guests = None
         status = "rented" if row["p_status"] == "sold" and mode == "long_term_rent" else "published"
 
