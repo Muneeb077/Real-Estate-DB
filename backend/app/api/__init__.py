@@ -12,8 +12,8 @@ def healthcheck():
 
 
 def register_blueprints(app):
-    from . import auth, host, interactions, listings, me
+    from . import auth, host, interactions, listings, me, stays
 
     app.register_blueprint(health)
-    for module in (listings, auth, me, interactions, host):
+    for module in (listings, auth, me, interactions, host, stays):
         app.register_blueprint(module.bp)

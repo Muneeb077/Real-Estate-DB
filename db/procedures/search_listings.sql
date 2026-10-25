@@ -7,7 +7,9 @@
 --   MBRContains) and radius search (ST_Distance_Sphere) on SRID 4326 points.
 -- * Keyset pagination: the caller passes the sort value and id of the last row it
 --   saw; no OFFSET scans, stable under concurrent inserts.
--- * p_check_in / p_check_out are accepted here and implemented in 0004 (stays).
+-- * p_check_in / p_check_out keep only stays with no overlapping booking or
+--   blocked day (anti-join with NOT EXISTS).
+-- Repeatable: re-applied by migration 0004 when the bookings tables arrive.
 DROP PROCEDURE IF EXISTS SearchListings;
 
 DELIMITER $$
@@ -103,6 +105,16 @@ BEGIN
     IF p_near_lat IS NOT NULL THEN
         SET @sql = CONCAT(@sql, ' AND ST_Distance_Sphere(ga.location, ST_GeomFromText(''POINT(',
             p_near_lat, ' ', p_near_lng, ')'', 4326)) <= ', COALESCE(p_radius_km, 10) * 1000);
+    END IF;
+
+    IF p_check_in IS NOT NULL AND p_check_out IS NOT NULL THEN
+        SET @sql = CONCAT(@sql,
+            ' AND v.listing_mode = ''short_term_stay''',
+            ' AND NOT EXISTS (SELECT 1 FROM bookings b WHERE b.listing_id = v.id',
+            ' AND (b.status = ''confirmed'' OR (b.status = ''pending'' AND b.hold_expires_at > NOW()))',
+            ' AND b.check_in < ', QUOTE(p_check_out), ' AND b.check_out > ', QUOTE(p_check_in), ')',
+            ' AND NOT EXISTS (SELECT 1 FROM blocked_dates bd WHERE bd.listing_id = v.id',
+            ' AND bd.day >= ', QUOTE(p_check_in), ' AND bd.day < ', QUOTE(p_check_out), ')');
     END IF;
 
     IF p_cursor_id IS NOT NULL THEN

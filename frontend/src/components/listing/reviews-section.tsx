@@ -9,7 +9,7 @@ export function ReviewsSection({ listing }: { listing: ListingDetail }) {
     <section>
       <h2 className="mb-4 flex items-center gap-2 text-xl font-semibold">
         <StarIcon className="size-5 fill-current" />
-        {listing.review_count ? `${listing.rating_avg?.toFixed(2)} · ${listing.review_count} reviews` : "No reviews yet"}
+        {listing.review_count ? `${listing.rating_avg?.toFixed(2)} · ${listing.review_count} ${listing.review_count === 1 ? "review" : "reviews"}` : "No reviews yet"}
       </h2>
       <div className="grid gap-6 sm:grid-cols-2">
         {listing.reviews.map((r) => (

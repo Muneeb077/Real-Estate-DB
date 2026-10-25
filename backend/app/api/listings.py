@@ -133,8 +133,8 @@ def host_card(host_id):
 
 
 def listing_reviews(listing_id):
-    # reviews arrive with the stays migration (0004); until then a listing has none
-    return []
+    from .stays import listing_reviews as reviews
+    return reviews(listing_id)
 
 
 @bp.post("/listings/<public_id>/views")

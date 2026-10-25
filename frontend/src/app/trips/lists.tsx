@@ -36,6 +36,44 @@ export type Viewing = {
   guest_name?: string;
 };
 
+type StayRow = {
+  public_id: string;
+  check_in: string;
+  check_out: string;
+  nights: number;
+  total_price: number;
+  currency: string;
+  status: string;
+  listing_title: string;
+  listing_thumb: string | null;
+  city: string;
+  reviewed: number;
+};
+
+export function StaysList() {
+  const { data = [], isLoading } = useQuery({ queryKey: ["my-bookings"], queryFn: () => api<StayRow[]>("/me/bookings") });
+  if (isLoading) return <div className="h-32 animate-pulse rounded-xl bg-muted" />;
+  if (!data.length) return <Empty text="No stays booked yet." />;
+  return (
+    <ul className="divide-y rounded-xl border">
+      {data.map((b) => (
+        <li key={b.public_id}>
+          <Link href={`/trips/${b.public_id}`} className="flex flex-wrap items-center gap-4 p-4 hover:bg-muted/50">
+            <div className="min-w-0 flex-1">
+              <div className="font-medium">{b.listing_title}</div>
+              <div className="text-sm text-muted-foreground">
+                {b.city} · {shortDate(b.check_in)} → {shortDate(b.check_out)} · {money(b.total_price, b.currency)}
+              </div>
+            </div>
+            {b.status === "completed" && !b.reviewed && <span className="text-sm font-medium text-primary">Leave a review</span>}
+            <StatusBadge status={b.status} />
+          </Link>
+        </li>
+      ))}
+    </ul>
+  );
+}
+
 export function OffersList() {
   const qc = useQueryClient();
   const { data = [], isLoading } = useQuery({ queryKey: ["my-offers"], queryFn: () => api<Offer[]>("/me/offers") });

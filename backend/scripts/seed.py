@@ -15,7 +15,7 @@ import os
 import random
 import sys
 import time
-from datetime import date, timedelta
+from datetime import date, datetime, timedelta
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
 
@@ -150,6 +150,108 @@ def create_user(conn, email, name, roles, verified=True, mfa_secret=None):
     return uid
 
 
+REVIEW_TEXT = [
+    "Spotless and exactly like the photos. Would stay again.",
+    "Great location, easy check-in and a very responsive host.",
+    "Comfortable beds and a well equipped kitchen.",
+    "Lovely neighbourhood with lots of cafes nearby.",
+    "A bit noisy at night but otherwise a great stay.",
+    "The host went above and beyond. Highly recommended!",
+    "Good value for the price, would book again.",
+    "Bright, quiet and close to transit. Perfect for a work trip.",
+]
+
+
+def seed_history(conn, guests, gina):
+    """
+    A year of activity so ratings, earnings charts and admin KPIs have data:
+    completed stays with payments, transactions and reviews; accepted offers for
+    the listings the legacy data marked sold/rented; a few upcoming trips.
+    Rows are inserted directly with historical dates; the triggers still run.
+    """
+    cur = conn.cursor()
+    today = date.today()
+    cur.execute("SELECT CAST(JSON_UNQUOTE(v) AS DECIMAL(5,4)) FROM settings WHERE k = 'service_fee_rate'")
+    fee_rate = float(cur.fetchone()[0])
+    cur.execute("""SELECT l.id, l.host_id, l.price, l.max_guests, h.commission_rate FROM listings l
+                   JOIN host_profiles h ON h.user_id = l.host_id
+                   WHERE l.listing_mode = 'short_term_stay' AND l.status = 'published' ORDER BY RAND(11) LIMIT 4000""")
+    stays = cur.fetchall()
+
+    bookings, upcoming = [], []
+    for lid, host, price, max_guests, rate in stays:
+        day = today - timedelta(days=random.randint(330, 365))
+        for _ in range(random.randint(1, 5)):
+            day += timedelta(days=random.randint(5, 70))
+            nights = random.randint(2, 7)
+            if day + timedelta(days=nights) >= today:
+                break
+            sub = float(price) * nights
+            fee = round(sub * fee_rate, 2)
+            bookings.append((str(ULID()), lid, random.choice(guests), host, day, day + timedelta(days=nights),
+                             random.randint(1, max_guests), sub, fee, round(sub + fee, 2), float(rate)))
+            day += timedelta(days=nights)
+    for lid, host, price, max_guests, rate in stays[:40]:
+        start = today + timedelta(days=random.randint(5, 60))
+        nights = random.randint(2, 5)
+        sub = float(price) * nights
+        fee = round(sub * fee_rate, 2)
+        upcoming.append((str(ULID()), lid, gina if len(upcoming) < 6 else random.choice(guests), host, start,
+                         start + timedelta(days=nights), 1, sub, fee, round(sub + fee, 2), float(rate)))
+
+    def insert_bookings(rows, status):
+        first = next_id(cur, "bookings")
+        cur.executemany(
+            f"""INSERT INTO bookings (public_id, listing_id, guest_id, host_id, check_in, check_out, guests,
+                                      subtotal, service_fee, total_price, status, created_at)
+                VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, '{status}', %s)""",
+            [r[:10] + (r[4] - timedelta(days=14),) for r in rows])
+        check_ids(cur, "bookings", first, len(rows))
+        cur.executemany(
+            """INSERT INTO payments (booking_id, provider, provider_ref, amount, created_at)
+               VALUES (%s, 'simulated', %s, %s, %s)""",
+            [(first + i, f"sim_seed_{first + i}", r[9], r[4] - timedelta(days=14)) for i, r in enumerate(rows)])
+        cur.executemany(
+            """INSERT INTO transactions (kind, listing_id, host_id, guest_id, booking_id, amount, commission,
+                                         service_fee, created_at)
+               VALUES ('stay', %s, %s, %s, %s, %s, %s, %s, %s)""",
+            [(r[1], r[3], r[2], first + i, r[9], round(r[7] * r[10], 2), r[8], r[4] - timedelta(days=14))
+             for i, r in enumerate(rows)])
+        return first
+
+    first = insert_bookings(bookings, "completed")
+    reviews = []
+    for i, r in enumerate(bookings):
+        if random.random() < 0.7:
+            rating = random.choices([5, 4, 3, 2], weights=[55, 32, 9, 4])[0]
+            reviews.append((first + i, r[1], r[2], rating, random.choice(REVIEW_TEXT), r[5] + timedelta(days=2)))
+    cur.executemany("""INSERT INTO reviews (booking_id, listing_id, author_id, rating, comment, created_at)
+                       VALUES (%s, %s, %s, %s, %s, %s)""", reviews)
+    insert_bookings(upcoming, "confirmed")
+
+    # Accepted offers + transactions for listings the legacy CSV marked sold / rented.
+    cur.execute("""SELECT l.id, l.host_id, l.price, l.listing_mode, h.commission_rate FROM listings l
+                   JOIN host_profiles h ON h.user_id = l.host_id WHERE l.status IN ('sold','rented')""")
+    closed = cur.fetchall()
+    first_offer = next_id(cur, "offers")
+    offer_rows, tx_rows = [], []
+    for i, (lid, host, price, mode, rate) in enumerate(closed):
+        when = datetime.combine(today - timedelta(days=random.randint(1, 365)), datetime.min.time())
+        amount = round(float(price) * random.uniform(0.92, 1.03), -2 if mode == "sale" else 0)
+        guest = random.choice(guests)
+        offer_rows.append((str(ULID()), lid, guest, amount, when - timedelta(days=10), when))
+        tx_rows.append(("sale" if mode == "sale" else "rental", lid, host, guest, first_offer + i, amount,
+                        round(amount * float(rate), 2), when))
+    cur.executemany("""INSERT INTO offers (public_id, listing_id, guest_id, amount, status, created_at, decided_at)
+                       VALUES (%s, %s, %s, %s, 'accepted', %s, %s)""", offer_rows)
+    check_ids(cur, "offers", first_offer, len(offer_rows))
+    cur.executemany("""INSERT INTO transactions (kind, listing_id, host_id, guest_id, offer_id, amount, commission, created_at)
+                       VALUES (%s, %s, %s, %s, %s, %s, %s, %s)""", tx_rows)
+    conn.commit()
+    print(f"  history: {len(bookings)} past stays, {len(reviews)} reviews, {len(upcoming)} upcoming, "
+          f"{len(closed)} closed sales/rentals", file=sys.stderr)
+
+
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("--limit", type=int, default=None)
@@ -168,8 +270,8 @@ def main():
 
         admin_secret = mfa.new_secret()
         create_user(conn, "admin@homenest.dev", "Avery Admin", ["admin", "guest"], mfa_secret=admin_secret)
-        create_user(conn, "guest@homenest.dev", "Gina Guest", ["guest"])
-        guests = [create_user(conn, f"guest{i}@homenest.dev", f"Guest {i}", ["guest"]) for i in range(1, 21)]
+        gina = create_user(conn, "guest@homenest.dev", "Gina Guest", ["guest"])
+        guests = [gina] + [create_user(conn, f"guest{i}@homenest.dev", f"Guest {i}", ["guest"]) for i in range(1, 21)]
 
         # Legacy agents become verified hosts.
         hosts = {}
@@ -242,6 +344,7 @@ def main():
         # A few views/favourites so dashboards have data before real traffic arrives.
         cur.execute("UPDATE listing_stats SET views = FLOOR(RAND(7) * 400), favorites = FLOOR(RAND(9) * 25)")
         conn.commit()
+        seed_history(conn, guests, gina)
         raw.close()
 
     print(json.dumps({

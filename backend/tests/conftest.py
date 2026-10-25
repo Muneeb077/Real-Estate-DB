@@ -65,24 +65,24 @@ class ApiClient:
         self.c = app.test_client()
         self.c.get("/api/v1/auth/csrf")
 
-    def _csrf(self):
+    def _csrf(self, kw):
         cookie = self.c.get_cookie("hn_csrf")
-        return {"X-CSRF-Token": cookie.value if cookie else ""}
+        return {"X-CSRF-Token": cookie.value if cookie else "", **kw.pop("headers", {})}
 
     def get(self, path, **kw):
         return self.c.get(f"/api/v1{path}", **kw)
 
     def post(self, path, json=None, **kw):
-        return self.c.post(f"/api/v1{path}", json=json, headers=self._csrf(), **kw)
+        return self.c.post(f"/api/v1{path}", json=json, headers=self._csrf(kw), **kw)
 
     def put(self, path, json=None, **kw):
-        return self.c.put(f"/api/v1{path}", json=json, headers=self._csrf(), **kw)
+        return self.c.put(f"/api/v1{path}", json=json, headers=self._csrf(kw), **kw)
 
     def patch(self, path, json=None, **kw):
-        return self.c.patch(f"/api/v1{path}", json=json, headers=self._csrf(), **kw)
+        return self.c.patch(f"/api/v1{path}", json=json, headers=self._csrf(kw), **kw)
 
     def delete(self, path, json=None, **kw):
-        return self.c.delete(f"/api/v1{path}", json=json, headers=self._csrf(), **kw)
+        return self.c.delete(f"/api/v1{path}", json=json, headers=self._csrf(kw), **kw)
 
 
 @pytest.fixture

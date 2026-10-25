@@ -52,7 +52,7 @@ async function ListingContent({ id }: { id: string }) {
             <Badge variant="secondary">{MODE_LABEL[listing.listing_mode]}</Badge>
             {listing.rating_avg != null && (
               <span className="flex items-center gap-1 text-foreground">
-                <StarIcon className="size-3.5 fill-current" /> {listing.rating_avg.toFixed(2)} · {listing.review_count} reviews
+                <StarIcon className="size-3.5 fill-current" /> {listing.rating_avg.toFixed(2)} · {listing.review_count} {listing.review_count === 1 ? "review" : "reviews"}
               </span>
             )}
             <span>
