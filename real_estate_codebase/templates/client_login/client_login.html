@@ -93,6 +93,7 @@
     <!-- Login Box -->
     <div class="login-container">
         <form method="POST">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
             <h2>Client Login</h2>
             <input type="text" name="username" placeholder="Username" required>
             <input type="password" name="password" placeholder="Password" required>

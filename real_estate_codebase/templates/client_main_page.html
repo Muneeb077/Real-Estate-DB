@@ -155,7 +155,7 @@
 </head>
 <body>
     <div class="logout-section">
-        <a href="/client_logout">Logout</a>
+        {% if session.get("client_username") %}<a href="/client_logout">Logout</a>{% else %}<a href="/login">Login</a>{% endif %}
     </div>
     <div class="container">
         <div class="filter-section">
@@ -170,7 +170,7 @@
                 <input type="text" name="size_max" placeholder="Max"><br>
 
                 <label for="property_type">Property Type:</label><br>
-                <input type="text" name="property_type" placeholder="Type"><br>
+                <select name="property_type"><option value="">Any</option><option value="sale">Sale</option><option value="rent">Rent</option></select><br>
 
                 <input type="submit" value="Submit">
             </form>
@@ -202,7 +202,7 @@
                         {% endfor %}
                     {% else %}
                         <tr>
-                            <td colspan="5">No properties found matching the criteria.</td>
+                            <td colspan="6">No properties found matching the criteria.</td>
                         </tr>
                     {% endif %}
                 </tbody>

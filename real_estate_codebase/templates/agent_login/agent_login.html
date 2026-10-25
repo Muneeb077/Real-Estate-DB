@@ -92,6 +92,7 @@
                 {% endwith %}
             </div>
             <form method="POST" action="{{ url_for('agent_login') }}">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                 <input type="text" name="Agent ID" placeholder="Agent ID" required>
                 <input type="password" name="password" placeholder="Password" required>
                 <button type="submit">Login</button>

@@ -201,6 +201,7 @@
         <div class="filter">
             <h2>Filter</h2>
             <form method="POST">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                 <label for="price_min">Price</label>
                 <input type="number" name="price_min" id="price_min" placeholder="Min">
                 <input type="number" name="price_max" id="price_max" placeholder="Max">
@@ -210,7 +211,7 @@
                 <input type="number" name="size_max" id="size_max" placeholder="Max">
 
                 <label for="property_type">Property Type</label>
-                <input type="text" name="property_type" id="property_type" placeholder="e.g., Apartment">
+                <select name="property_type" id="property_type"><option value="">Any</option><option value="sale">Sale</option><option value="rent">Rent</option></select>
 
                 <button type="submit">Submit</button>
             </form>
@@ -265,8 +266,9 @@
         <div class="modal-content">
             <div class="modal-header">Add Property</div>
             <form method="POST" action="{{ url_for('add_property') }}">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                 <label for="p_type">Property Type</label>
-                <input type="text" name="p_type" id="p_type" required>
+                <select name="p_type" id="p_type" required><option value="sale">Sale</option><option value="rent">Rent</option></select>
 
                 <label for="p_size">Property Size</label>
                 <input type="number" name="p_size" id="p_size" required>
@@ -277,8 +279,7 @@
                 <label for="p_status">Property Status</label>
                 <select name="p_status" id="p_status" required>
                     <option value="available">Available</option>
-                    <option value="sold">Sold</option>
-                </select>
+                                    </select>
 
                 <div style="text-align: right;">
                     <button type="submit">Add Property</button>
@@ -293,10 +294,11 @@
         <div class="modal-content">
             <div class="modal-header">Modify Property</div>
             <form method="POST" action="{{ url_for('modify_property') }}">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                 <input type="hidden" name="p_id" id="modify_p_id">
 
                 <label for="modify_p_type">Property Type</label>
-                <input type="text" name="p_type" id="modify_p_type" required>
+                <select name="p_type" id="modify_p_type" required><option value="sale">Sale</option><option value="rent">Rent</option></select>
 
                 <label for="modify_p_price">Property Price</label>
                 <input type="number" name="p_price" id="modify_p_price" required>
@@ -314,6 +316,7 @@
         <div class="modal-content">
             <div class="modal-header">Sell Property</div>
             <form method="POST" action="{{ url_for('sell_property') }}">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                 <input type="hidden" name="p_id" id="sell_p_id">
 
                 <label for="sell_price">Selling Price</label>

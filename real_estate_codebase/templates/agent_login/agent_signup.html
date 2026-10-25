@@ -80,8 +80,9 @@
     <div class="signup-container">
         <h1>Agent Signup</h1>
         <form method="POST">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
             <label for="agent_id">Agent ID:</label>
-            <span id="agent_id_display">{{ agent_id if agent_id else 'Will be generated upon registration' }}</span><br>
+            <span id="agent_id_display">Assigned after registration</span><br>
 
             <label for="agent_name">Agent Name:</label>
             <input type="text" id="agent_name" name="agent_name" placeholder="Enter your name" required>

@@ -1,105 +1,62 @@
-from dbconnection import MySQLConnection
+from dbconnection import get_connection
+from passwords import hash_password, verify_password
+
 
 class Client:
-    def __init__(self):
-        self.db = MySQLConnection()
 
     def register_client(self, c_name, c_username, c_password, contact, postal_code, city, street, state):
         """
-        Registers a new client into the Clients table.
+        Registers a new client into the Clients table. The password is stored as an Argon2id hash.
         """
-        self.db.connect()
-        try:
-            cursor = self.db.connection.cursor()
+        with get_connection() as connection:
+            cursor = connection.cursor()
             query = """
             INSERT INTO Clients (c_name, c_username, c_password, contact, postal_code, city, street, state)
             VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
             """
-            cursor.execute(query, (c_name, c_username, c_password, contact, postal_code, city, street, state))
-            self.db.connection.commit()
-            print("Client registered successfully!")
-        except Exception as e:
-            print(f"Error registering client: {e}")
-        finally:
-            self.db.disconnect()
+            cursor.execute(query, (c_name, c_username, hash_password(c_password), contact,
+                                   postal_code, city, street, state))
+            connection.commit()
 
-    def load_client_info(self, c_username):
+    def authenticate(self, c_username, c_password):
         """
-        Fetches and returns client information based on the username.
+        Returns True when the username exists and the password matches its hash.
         """
-        self.db.connect()
-        try:
-            cursor = self.db.connection.cursor(dictionary=True)
-            query = "SELECT * FROM Clients WHERE c_username = %s"
-            cursor.execute(query, (c_username,))
-            client_info = cursor.fetchone()
-            if client_info:
-                return client_info
-            else:
-                print("Client not found!")
-                return None
-        except Exception as e:
-            print(f"Error loading client information: {e}")
-        finally:
-            self.db.disconnect()
+        with get_connection() as connection:
+            cursor = connection.cursor()
+            cursor.execute("SELECT c_password FROM Clients WHERE c_username = %s", (c_username,))
+            result = cursor.fetchone()
+        return bool(result) and verify_password(result[0], c_password)
 
     def forgot_password(self, new_password, c_username, contact):
         """
-        Validates the contact information for the username and resets the password.
+        Resets the password when the username and contact match. Returns True on success.
         """
-        self.db.connect()
-        try:
-            cursor = self.db.connection.cursor()
-            query = "SELECT * FROM Clients WHERE c_username = %s AND contact = %s"
-            cursor.execute(query, (c_username, contact))
-            if cursor.fetchone():
-                update_query = "UPDATE Clients SET c_password = %s WHERE c_username = %s"
-                cursor.execute(update_query, (new_password, c_username))
-                self.db.connection.commit()
-            else:
-                print("Invalid username or contact information!")
-        except Exception as e:
-            print(f"Error resetting password: {e}")
-        finally:
-            self.db.disconnect()
+        with get_connection() as connection:
+            cursor = connection.cursor()
+            update_query = "UPDATE Clients SET c_password = %s WHERE c_username = %s AND contact = %s"
+            cursor.execute(update_query, (hash_password(new_password), c_username, contact))
+            connection.commit()
+            return cursor.rowcount == 1
 
     def check_username(self, c_username):
         """
-        Checks if a username is already taken.
+        Returns True when the username is still available.
         """
-        self.db.connect()
-        try:
-            cursor = self.db.connection.cursor()
-            query = "SELECT c_username FROM Clients WHERE c_username = %s"
-            cursor.execute(query, (c_username,))
-            if cursor.fetchone():
-                print("Username is already taken.")
-                return False
-            else:
-                print("Username is available.")
-                return True
-        except Exception as e:
-            print(f"Error checking username: {e}")
-        finally:
-            self.db.disconnect()
+        with get_connection() as connection:
+            cursor = connection.cursor()
+            cursor.execute("SELECT 1 FROM Clients WHERE c_username = %s", (c_username,))
+            return cursor.fetchone() is None
 
     def change_password(self, c_username, old_password, new_password):
         """
         Changes the client's password after validating the old password.
         """
-        self.db.connect()
-        try:
-            cursor = self.db.connection.cursor()
-            query = "SELECT c_password FROM Clients WHERE c_username = %s"
-            cursor.execute(query, (c_username,))
-            result = cursor.fetchone()
-            if result and result[0] == old_password:
-                update_query = "UPDATE Clients SET c_password = %s WHERE c_username = %s"
-                cursor.execute(update_query, (new_password, c_username))
-                self.db.connection.commit()
-            else:
-                print("Old password is incorrect!")
-        except Exception as e:
-            print(f"Error changing password: {e}")
-        finally:
-            self.db.disconnect()
+        if not self.authenticate(c_username, old_password):
+            return False
+        with get_connection() as connection:
+            cursor = connection.cursor()
+            update_query = "UPDATE Clients SET c_password = %s WHERE c_username = %s"
+            cursor.execute(update_query, (hash_password(new_password), c_username))
+            connection.commit()
+            return True
