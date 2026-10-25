@@ -1,0 +1,315 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1720 1180" width="1720" height="1180" font-family="Inter, -apple-system, Segoe UI, Helvetica, Arial, sans-serif">
+  <title>HomeNest system design</title>
+  <style>
+    .bg { fill: #f8fafc; }
+    .title { fill: #0f172a; font-size: 30px; font-weight: 700; }
+    .subtitle { fill: #475569; font-size: 15px; }
+    .col { fill: #64748b; font-size: 13px; font-weight: 700; letter-spacing: 1.5px; }
+    .box { fill: #ffffff; stroke: #cbd5e1; stroke-width: 1.5; }
+    .group { fill: #eef2ff; stroke: #818cf8; stroke-width: 1.5; stroke-dasharray: 6 4; }
+    .client { fill: #fff7ed; stroke: #fb923c; stroke-width: 1.5; }
+    .edge { fill: #ecfeff; stroke: #22d3ee; stroke-width: 1.5; }
+    .fe { fill: #f0f9ff; stroke: #38bdf8; stroke-width: 1.5; }
+    .db { fill: #f0fdf4; stroke: #22c55e; stroke-width: 1.5; }
+    .ext { fill: #faf5ff; stroke: #c084fc; stroke-width: 1.5; }
+    .crypto { fill: #fef2f2; stroke: #f87171; stroke-width: 1.5; }
+    .chip { fill: #ffffff; stroke: #a5b4fc; stroke-width: 1; }
+    .h { fill: #0f172a; font-size: 16px; font-weight: 700; }
+    .t { fill: #334155; font-size: 13px; }
+    .s { fill: #64748b; font-size: 12px; }
+    .chipt { fill: #3730a3; font-size: 12.5px; font-weight: 600; }
+    .lbl { fill: #1e40af; font-size: 11.5px; font-weight: 600; }
+    .lbla { fill: #7c3aed; font-size: 11.5px; font-weight: 600; }
+    .tls { stroke: #2563eb; stroke-width: 2; fill: none; }
+    .async { stroke: #7c3aed; stroke-width: 2; fill: none; stroke-dasharray: 7 5; }
+    .rel { stroke: #94a3b8; stroke-width: 1.5; fill: none; }
+    .ent { fill: #ffffff; stroke: #94a3b8; stroke-width: 1.2; }
+    .enth { fill: #e2e8f0; }
+    .entt { fill: #0f172a; font-size: 13px; font-weight: 700; }
+    .entc { fill: #475569; font-size: 11.5px; font-family: ui-monospace, SFMono-Regular, Menlo, monospace; }
+    .lock { fill: #dc2626; }
+    .arrowhead { fill: #2563eb; }
+    .arrowheada { fill: #7c3aed; }
+    .panel { fill: #ffffff; stroke: #cbd5e1; stroke-width: 1.5; }
+    @media (prefers-color-scheme: dark) {
+      .bg { fill: #0b1120; }
+      .title, .h, .entt { fill: #f1f5f9; }
+      .subtitle, .s, .col { fill: #94a3b8; }
+      .t, .entc { fill: #cbd5e1; }
+      .box, .panel, .ent, .chip { fill: #111827; stroke: #334155; }
+      .enth { fill: #1e293b; }
+      .group { fill: #1e1b4b; stroke: #6366f1; }
+      .client { fill: #2a1a0b; stroke: #f97316; }
+      .edge { fill: #062a30; stroke: #06b6d4; }
+      .fe { fill: #0c2235; stroke: #0ea5e9; }
+      .db { fill: #052e16; stroke: #22c55e; }
+      .ext { fill: #2e1065; stroke: #a855f7; }
+      .crypto { fill: #3b0d0d; stroke: #ef4444; }
+      .chipt { fill: #c7d2fe; }
+      .lbl { fill: #93c5fd; }
+      .lbla { fill: #d8b4fe; }
+      .tls { stroke: #60a5fa; }
+      .arrowhead { fill: #60a5fa; }
+      .async { stroke: #a78bfa; }
+      .arrowheada { fill: #a78bfa; }
+      .rel { stroke: #64748b; }
+      .lock { fill: #f87171; }
+    }
+  </style>
+  <defs>
+    <marker id="a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path class="arrowhead" d="M0,0 L10,5 L0,10 z"/></marker>
+    <marker id="b" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path class="arrowheada" d="M0,0 L10,5 L0,10 z"/></marker>
+    <g id="lk"><rect class="lock" x="-6" y="-2" width="12" height="9" rx="1.5"/><path d="M-3.5,-2 v-3 a3.5,3.5 0 0 1 7,0 v3" fill="none" stroke="#dc2626" stroke-width="1.8"/></g>
+  </defs>
+
+  <rect class="bg" width="1720" height="1180"/>
+  <text class="title" x="40" y="52">HomeNest: Real Estate Marketplace System Design</text>
+  <text class="subtitle" x="40" y="78">Public listings (sale · long-term rent · short-term stays) · guests, hosts and admins · MySQL 8 core · encryption in transit and at rest</text>
+
+  <text class="col" x="40" y="118">CLIENTS</text>
+  <text class="col" x="290" y="118">EDGE</text>
+  <text class="col" x="560" y="118">APPLICATION</text>
+  <text class="col" x="1140" y="118">DATA</text>
+  <text class="col" x="1460" y="118">EXTERNAL / ASYNC</text>
+
+  <!-- Clients -->
+  <rect class="client" x="40" y="140" width="190" height="72" rx="10"/>
+  <text class="h" x="56" y="168">Public visitor</text><text class="s" x="56" y="190">browse, search, map</text>
+  <rect class="client" x="40" y="236" width="190" height="72" rx="10"/>
+  <text class="h" x="56" y="264">Guest / Client</text><text class="s" x="56" y="286">wishlist, book, offer</text>
+  <rect class="client" x="40" y="332" width="190" height="72" rx="10"/>
+  <text class="h" x="56" y="360">Host / Agent</text><text class="s" x="56" y="382">list, manage, earnings</text>
+  <rect class="client" x="40" y="428" width="190" height="72" rx="10"/>
+  <text class="h" x="56" y="456">Admin</text><text class="s" x="56" y="478">moderate, audit, backup</text>
+
+  <!-- Edge -->
+  <rect class="edge" x="290" y="150" width="210" height="100" rx="10"/>
+  <text class="h" x="306" y="178">CDN</text>
+  <text class="t" x="306" y="200">static assets, photos</text>
+  <text class="t" x="306" y="220">image cache</text>
+  <rect class="edge" x="290" y="290" width="210" height="190" rx="10"/>
+  <text class="h" x="306" y="318">Nginx / Load Balancer</text>
+  <text class="t" x="306" y="344">TLS 1.3 termination</text>
+  <text class="t" x="306" y="366">HSTS · CSP headers</text>
+  <text class="t" x="306" y="388">rate limiting</text>
+  <text class="t" x="306" y="410">/api → Flask pool</text>
+  <text class="t" x="306" y="432">/ → Next.js</text>
+  <use href="#lk" x="478" y="460"/>
+
+  <!-- Frontend -->
+  <rect class="fe" x="560" y="140" width="520" height="130" rx="10"/>
+  <text class="h" x="576" y="168">Next.js frontend (TypeScript · Tailwind · shadcn/ui)</text>
+  <text class="t" x="576" y="194">SSR/ISR public pages: home, search + map (Leaflet), listing detail</text>
+  <text class="t" x="576" y="216">Guest: wishlists, trips, inbox · Host: dashboard, calendar</text>
+  <text class="t" x="576" y="238">Admin: KPIs, moderation, audit log · TanStack Query, Zod</text>
+  <text class="s" x="576" y="258">auth via httpOnly · Secure · SameSite cookies + CSRF token</text>
+
+  <!-- API tier -->
+  <rect class="group" x="560" y="320" width="520" height="420" rx="12"/>
+  <text class="h" x="576" y="348">Flask REST API × N  (Gunicorn, stateless, /api/v1)</text>
+  <text class="s" x="576" y="368">SQLAlchemy connection pool · Pydantic validation · RBAC decorators</text>
+  <g>
+    <rect class="chip" x="576" y="384" width="236" height="52" rx="8"/>
+    <text class="chipt" x="590" y="406">Auth</text><text class="s" x="590" y="425">Argon2id · JWT + refresh · TOTP</text>
+    <rect class="chip" x="828" y="384" width="236" height="52" rx="8"/>
+    <text class="chipt" x="842" y="406">Listings / Search</text><text class="s" x="842" y="425">full-text · spatial · keyset pages</text>
+    <rect class="chip" x="576" y="446" width="236" height="52" rx="8"/>
+    <text class="chipt" x="590" y="468">Bookings</text><text class="s" x="590" y="487">CreateBooking() · overlap lock</text>
+    <rect class="chip" x="828" y="446" width="236" height="52" rx="8"/>
+    <text class="chipt" x="842" y="468">Offers / Sales</text><text class="s" x="842" y="487">CompleteSale() · atomic</text>
+    <rect class="chip" x="576" y="508" width="236" height="52" rx="8"/>
+    <text class="chipt" x="590" y="530">Inquiries / Messages</text><text class="s" x="590" y="549">encrypted at rest</text>
+    <rect class="chip" x="828" y="508" width="236" height="52" rx="8"/>
+    <text class="chipt" x="842" y="530">Reviews · Wishlists</text><text class="s" x="842" y="549">rating trigger</text>
+    <rect class="chip" x="576" y="570" width="236" height="52" rx="8"/>
+    <text class="chipt" x="590" y="592">Admin</text><text class="s" x="590" y="611">moderation · KPIs · audit</text>
+    <rect class="chip" x="828" y="570" width="236" height="52" rx="8"/>
+    <text class="chipt" x="842" y="592">Media</text><text class="s" x="842" y="611">upload validation · EXIF strip</text>
+  </g>
+  <rect class="crypto" x="576" y="636" width="488" height="88" rx="8"/>
+  <use href="#lk" x="1042" y="656"/>
+  <text class="h" x="590" y="660">Crypto service</text>
+  <text class="t" x="590" y="682">AES-256-GCM envelope encryption (per-record DEK, KEK versioned)</text>
+  <text class="t" x="590" y="702">HMAC-SHA256 blind indexes for email / phone lookup</text>
+  <text class="s" x="590" y="718">SHA-256 hashed reset + refresh tokens · key rotation job</text>
+
+  <rect class="box" x="560" y="764" width="520" height="56" rx="10"/>
+  <text class="h" x="576" y="788">Observability</text>
+  <text class="t" x="576" y="808">structured JSON logs · Sentry errors · Prometheus /metrics · health checks</text>
+
+  <!-- Data tier -->
+  <rect class="db" x="1140" y="140" width="260" height="226" rx="10"/>
+  <use href="#lk" x="1378" y="160"/>
+  <text class="h" x="1156" y="168">MySQL 8, primary</text>
+  <text class="t" x="1156" y="192">procedures: SearchListings,</text>
+  <text class="t" x="1156" y="210">CreateBooking, CompleteSale</text>
+  <text class="t" x="1156" y="232">triggers: overlap guard, audit,</text>
+  <text class="t" x="1156" y="250">rating rollup · views · events</text>
+  <text class="t" x="1156" y="272">FULLTEXT + SPATIAL indexes</text>
+  <text class="t" x="1156" y="294">InnoDB TDE (keyring)</text>
+  <text class="t" x="1156" y="316">require_secure_transport=ON</text>
+  <text class="s" x="1156" y="340">users: app_rw · app_ro · backup · migrator</text>
+
+  <rect class="db" x="1140" y="410" width="260" height="90" rx="10"/>
+  <use href="#lk" x="1378" y="430"/>
+  <text class="h" x="1156" y="438">MySQL read replica</text>
+  <text class="t" x="1156" y="462">search + analytics reads</text>
+  <text class="s" x="1156" y="484">app_ro · window-function KPIs</text>
+
+  <rect class="db" x="1140" y="530" width="260" height="96" rx="10"/>
+  <text class="h" x="1156" y="558">Redis</text>
+  <text class="t" x="1156" y="582">search cache · rate-limit counters</text>
+  <text class="t" x="1156" y="604">job queue · token denylist</text>
+
+  <rect class="db" x="1140" y="656" width="260" height="96" rx="10"/>
+  <use href="#lk" x="1378" y="676"/>
+  <text class="h" x="1156" y="684">Object storage (S3 / MinIO)</text>
+  <text class="t" x="1156" y="708">listing photos (public-read)</text>
+  <text class="t" x="1156" y="728">KYC docs (private, SSE-KMS)</text>
+
+  <!-- External / async -->
+  <rect class="ext" x="1460" y="140" width="220" height="90" rx="10"/>
+  <use href="#lk" x="1658" y="160"/>
+  <text class="h" x="1476" y="168">KMS / Vault</text>
+  <text class="t" x="1476" y="192">master key (KEK)</text>
+  <text class="t" x="1476" y="212">wrap / unwrap DEKs</text>
+
+  <rect class="ext" x="1460" y="256" width="220" height="80" rx="10"/>
+  <text class="h" x="1476" y="284">Stripe (test mode)</text>
+  <text class="t" x="1476" y="306">payment intents</text>
+  <text class="s" x="1476" y="324">signed webhooks</text>
+
+  <rect class="ext" x="1460" y="410" width="220" height="196" rx="10"/>
+  <text class="h" x="1476" y="438">Background workers</text>
+  <text class="t" x="1476" y="462">emails (verify, reset)</text>
+  <text class="t" x="1476" y="484">photo resize → WebP</text>
+  <text class="t" x="1476" y="506">saved-search alerts</text>
+  <text class="t" x="1476" y="528">encrypted backups</text>
+  <text class="t" x="1476" y="550">key rotation</text>
+  <text class="s" x="1476" y="578">RQ / Celery</text>
+
+  <rect class="ext" x="1460" y="640" width="220" height="80" rx="10"/>
+  <use href="#lk" x="1658" y="660"/>
+  <text class="h" x="1476" y="668">Backup bucket</text>
+  <text class="t" x="1476" y="690">AES-GCM dumps</text>
+  <text class="s" x="1476" y="708">checksum + audit</text>
+
+  <rect class="ext" x="1460" y="744" width="220" height="70" rx="10"/>
+  <text class="h" x="1476" y="772">SMTP provider</text>
+  <text class="t" x="1476" y="794">transactional email</text>
+
+  <!-- Arrows: clients -> nginx -->
+  <path class="tls" d="M230,176 C262,176 262,350 288,360" marker-end="url(#a)"/>
+  <path class="tls" d="M230,272 C258,272 258,370 288,372" marker-end="url(#a)"/>
+  <path class="tls" d="M230,368 L288,384" marker-end="url(#a)"/>
+  <path class="tls" d="M230,464 C258,464 258,400 288,396" marker-end="url(#a)"/>
+  <path class="tls" d="M230,166 C255,160 268,190 288,195" marker-end="url(#a)"/>
+  <text class="lbl" x="236" y="140">HTTPS</text>
+
+  <!-- edge -> app -->
+  <path class="tls" d="M500,200 L558,200" marker-end="url(#a)"/>
+  <path class="tls" d="M500,330 C530,330 530,250 558,250" marker-end="url(#a)"/>
+  <path class="tls" d="M500,420 L558,420" marker-end="url(#a)"/>
+  <text class="lbl" x="506" y="412">/api</text>
+  <path class="tls" d="M700,270 L700,318" marker-end="url(#a)"/>
+  <text class="lbl" x="708" y="300">SSR fetch</text>
+
+  <!-- api -> data -->
+  <path class="tls" d="M1080,390 C1110,390 1110,260 1138,260" marker-end="url(#a)"/>
+  <text class="lbl" x="1086" y="412">app_rw</text>
+  <path class="tls" d="M1080,470 L1138,460" marker-end="url(#a)"/>
+  <text class="lbl" x="1086" y="455">app_ro</text>
+  <path class="async" d="M1270,366 L1270,408" marker-end="url(#b)"/>
+  <text class="lbla" x="1278" y="392">async replication</text>
+  <path class="tls" d="M1080,578 L1138,578" marker-end="url(#a)"/>
+  <path class="tls" d="M1080,700 L1138,700" marker-end="url(#a)"/>
+  <text class="lbl" x="1086" y="692">presign</text>
+
+  <!-- api -> kms / stripe via top bus -->
+  <path class="tls" d="M1080,340 L1118,340 L1118,100 L1430,100 L1430,185 L1458,185" marker-end="url(#a)"/>
+  <path class="tls" d="M1430,185 L1430,296 L1458,296" marker-end="url(#a)"/>
+  <text class="lbl" x="1180" y="94">KMS unwrap · Stripe API</text>
+
+  <!-- async -->
+  <path class="async" d="M1400,580 C1430,580 1430,520 1458,520" marker-end="url(#b)"/>
+  <text class="lbla" x="1404" y="612">jobs</text>
+  <path class="async" d="M1458,450 C1420,450 1430,330 1402,330" marker-end="url(#b)"/>
+  <text class="lbla" x="1440" y="402">mysqldump</text>
+  <path class="async" d="M1570,606 L1570,638" marker-end="url(#b)"/>
+  <path class="async" d="M1600,720 L1600,742" marker-end="url(#b)"/>
+  <path class="async" d="M1658,336 L1658,408" marker-end="url(#b)"/>
+  <text class="lbla" x="1650" y="380" text-anchor="end">webhooks</text>
+
+  <!-- ER inset -->
+  <rect class="panel" x="40" y="850" width="1060" height="300" rx="12"/>
+  <text class="h" x="60" y="880">Core data model (MySQL 8, InnoDB, utf8mb4)</text>
+
+  <path class="rel" d="M230,945 L280,945"/>
+  <path class="rel" d="M460,945 L500,945"/>
+  <path class="rel" d="M680,945 L720,945"/>
+  <path class="rel" d="M660,990 L660,1005 L990,1005 L990,990"/>
+  <path class="rel" d="M590,990 L590,1040"/>
+  <path class="rel" d="M780,1005 L780,1040"/>
+  <path class="rel" d="M500,1085 L460,1085"/>
+  <path class="rel" d="M860,1085 L900,1085"/>
+  <path class="rel" d="M590,1130 L590,1140 L990,1140 L990,1130"/>
+  <path class="rel" d="M140,990 L140,1040"/>
+
+  <g>
+    <rect class="ent" x="50" y="900" width="180" height="90" rx="6"/><rect class="enth" x="50.6" y="900.6" width="178.8" height="24" rx="6"/>
+    <text class="entt" x="60" y="917">users</text>
+    <text class="entc" x="60" y="942">public_id ULID</text><text class="entc" x="60" y="958">email_hash · pw_hash</text><text class="entc" x="60" y="974">role · mfa_secret_enc</text>
+
+    <rect class="ent" x="280" y="900" width="180" height="90" rx="6"/><rect class="enth" x="280.6" y="900.6" width="178.8" height="24" rx="6"/>
+    <text class="entt" x="290" y="917">host_profiles</text>
+    <text class="entc" x="290" y="942">user_id FK</text><text class="entc" x="290" y="958">license_enc</text><text class="entc" x="290" y="974">verification</text>
+
+    <rect class="ent" x="500" y="900" width="180" height="90" rx="6"/><rect class="enth" x="500.6" y="900.6" width="178.8" height="24" rx="6"/>
+    <text class="entt" x="510" y="917">listings</text>
+    <text class="entc" x="510" y="942">mode · status</text><text class="entc" x="510" y="958">price DECIMAL</text><text class="entc" x="510" y="974">FULLTEXT(title,desc)</text>
+
+    <rect class="ent" x="720" y="900" width="160" height="90" rx="6"/><rect class="enth" x="720.6" y="900.6" width="158.8" height="24" rx="6"/>
+    <text class="entt" x="730" y="917">addresses</text>
+    <text class="entc" x="730" y="942">city · country</text><text class="entc" x="730" y="958">street_enc</text><text class="entc" x="730" y="974">location POINT</text>
+
+    <rect class="ent" x="900" y="900" width="180" height="90" rx="6"/><rect class="enth" x="900.6" y="900.6" width="178.8" height="24" rx="6"/>
+    <text class="entt" x="910" y="917">photos · amenities</text>
+    <text class="entc" x="910" y="942">listing_id FK</text><text class="entc" x="910" y="958">url · sort_order</text><text class="entc" x="910" y="974">M:N amenities</text>
+
+    <rect class="ent" x="50" y="1040" width="180" height="90" rx="6"/><rect class="enth" x="50.6" y="1040.6" width="178.8" height="24" rx="6"/>
+    <text class="entt" x="60" y="1057">audit_log</text>
+    <text class="entc" x="60" y="1082">actor · action</text><text class="entc" x="60" y="1098">old/new JSON</text><text class="entc" x="60" y="1114">trigger-filled</text>
+
+    <rect class="ent" x="280" y="1040" width="180" height="90" rx="6"/><rect class="enth" x="280.6" y="1040.6" width="178.8" height="24" rx="6"/>
+    <text class="entt" x="290" y="1057">reviews</text>
+    <text class="entc" x="290" y="1082">booking_id UNIQUE</text><text class="entc" x="290" y="1098">rating CHECK 1-5</text><text class="entc" x="290" y="1114">host_reply</text>
+
+    <rect class="ent" x="500" y="1040" width="180" height="90" rx="6"/><rect class="enth" x="500.6" y="1040.6" width="178.8" height="24" rx="6"/>
+    <text class="entt" x="510" y="1057">bookings</text>
+    <text class="entc" x="510" y="1082">check_in/out</text><text class="entc" x="510" y="1098">total_price</text><text class="entc" x="510" y="1114">no-overlap trigger</text>
+
+    <rect class="ent" x="700" y="1040" width="160" height="90" rx="6"/><rect class="enth" x="700.6" y="1040.6" width="158.8" height="24" rx="6"/>
+    <text class="entt" x="710" y="1057">offers</text>
+    <text class="entc" x="710" y="1082">amount</text><text class="entc" x="710" y="1098">status</text><text class="entc" x="710" y="1114">→ CompleteSale()</text>
+
+    <rect class="ent" x="900" y="1040" width="180" height="90" rx="6"/><rect class="enth" x="900.6" y="1040.6" width="178.8" height="24" rx="6"/>
+    <text class="entt" x="910" y="1057">transactions</text>
+    <text class="entc" x="910" y="1082">AUTO_INCREMENT</text><text class="entc" x="910" y="1098">amount · commission</text><text class="entc" x="910" y="1114">booking | offer FK</text>
+  </g>
+
+  <!-- Legend -->
+  <rect class="panel" x="1140" y="850" width="540" height="300" rx="12"/>
+  <text class="h" x="1160" y="880">Legend</text>
+  <path class="tls" d="M1160,912 L1230,912" marker-end="url(#a)"/>
+  <text class="t" x="1244" y="916">synchronous call over TLS (HTTPS / MySQL TLS)</text>
+  <path class="async" d="M1160,944 L1230,944" marker-end="url(#b)"/>
+  <text class="t" x="1244" y="948">asynchronous (replication, queue, webhooks)</text>
+  <use href="#lk" x="1195" y="974"/>
+  <text class="t" x="1244" y="980">encrypted at rest / key material</text>
+  <text class="h" x="1160" y="1020">Encryption summary</text>
+  <text class="t" x="1160" y="1044">• Passwords: Argon2id · tokens: SHA-256 hashes, single-use</text>
+  <text class="t" x="1160" y="1066">• PII fields: AES-256-GCM envelope (DEK per record, KEK in KMS)</text>
+  <text class="t" x="1160" y="1088">• Lookups: HMAC-SHA256 blind index · TOTP MFA for admins</text>
+  <text class="t" x="1160" y="1110">• Storage: InnoDB TDE · SSE-KMS buckets · encrypted backups</text>
+  <text class="t" x="1160" y="1132">• Transit: TLS 1.3 edge, TLS-only MySQL, signed URLs</text>
+</svg>
