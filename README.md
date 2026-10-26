@@ -2,14 +2,6 @@
 
 Buy, rent long-term, or book a stay. Anyone can browse **50,000 listings** in 34 cities on a map, with no account needed. Guests save homes, message hosts, make offers and book stays. Hosts manage listings, calendars and earnings. Admins moderate content and work from an MFA-protected console.
 
-The project started as a MySQL coursework app and grew into a portfolio piece built around three things:
-
-| | What to look at |
-|---|---|
-| **Database** | 6 Alembic migrations of hand-written SQL: 30 tables, 15 stored procedures and functions, 21 triggers, a security-invoker view, 4 scheduled events, CTEs (including recursive) and window functions, FULLTEXT and SPATIAL indexes, CHECK constraints, generated columns, row locking, keyset pagination, range partitioning. See **[docs/DATABASE.md](docs/DATABASE.md)**. |
-| **Encryption & security** | Argon2id, AES-256-GCM envelope encryption with versioned keys and rotation, HMAC blind indexes, TOTP MFA, rotating refresh tokens with reuse detection, InnoDB TDE, TLS-only MySQL, encrypted streaming backups, append-only audit log. See **[docs/SECURITY.md](docs/SECURITY.md)**. |
-| **Frontend** | Next.js 16 (Cache Components / partial prerendering), React 19, Tailwind 4, shadcn/ui, TanStack Query, Leaflet map search, Recharts dashboards, dark mode. |
-
 ![System design](docs/system-design.png)
 
 <p>
@@ -83,18 +75,3 @@ frontend/           Next.js app: src/app (routes), src/components, src/lib
 docker/             MySQL image (keyring + TLS), Nginx edge config
 docs/               PLAN.md, DATABASE.md, SECURITY.md, system design, screenshots
 ```
-
-## What is configured but not exercised here
-
-The system design shows the production shape. These pieces are wired in code and config but were not run in this environment:
-
-- **Docker Compose stack:** files validated with `docker compose config`, but images not built (Docker wasn't running).
-- **Redis:** shared cache, distributed rate limits and the RQ queue. Without `REDIS_URL` the app falls back to an in-process cache and runs jobs inline, which is the tested path.
-- **Stripe Checkout and its signed webhook:** needs test keys. The simulated provider goes through the same `ConfirmBooking` procedure.
-- **S3/MinIO photo storage:** local disk is the tested path.
-- **Read replica routing** (`DATABASE_REPLICA_URL`) and SMTP delivery.
-- **KMS-backed keyring:** the `LocalKeyring` interface is where AWS KMS or Vault Transit would plug in.
-
-InnoDB TDE and TLS-only MySQL *were* verified locally; see [docs/SECURITY.md](docs/SECURITY.md#how-it-was-verified).
-
-The original coursework app (Flask + Jinja, plaintext passwords) is preserved on `main`. [docs/PLAN.md](docs/PLAN.md) lists every issue found in it and the plan that produced this branch.
