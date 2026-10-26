@@ -10,3 +10,4 @@ backups/
 uploads/
 .env.docker
 docker/nginx/certs/
+.DS_Store
