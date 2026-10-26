@@ -4,7 +4,6 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { useQueryClient } from "@tanstack/react-query";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
-import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { toast } from "sonner";
 import { z } from "zod";
@@ -20,16 +19,10 @@ const schema = z.object({
   password: z.string().min(1, "Enter your password"),
 });
 
-type LoginResponse = Me | { mfa_required: true; mfa_token: string };
-
 export function LoginForm() {
   const router = useRouter();
   const params = useSearchParams();
   const qc = useQueryClient();
-  const [mfaToken, setMfaToken] = useState<string | null>(null);
-  const [code, setCode] = useState("");
-  const [useRecovery, setUseRecovery] = useState(false);
-  const [busy, setBusy] = useState(false);
   const form = useForm<z.infer<typeof schema>>({ resolver: zodResolver(schema) });
   const next = safeNext(params.get("next"));
 
@@ -41,50 +34,10 @@ export function LoginForm() {
 
   async function onSubmit(values: z.infer<typeof schema>) {
     try {
-      const res = await api<LoginResponse>("/auth/login", { body: values });
-      if ("mfa_required" in res) setMfaToken(res.mfa_token);
-      else done(res);
+      done(await api<Me>("/auth/login", { body: values }));
     } catch (e) {
       toast.error(errorMessage(e));
     }
-  }
-
-  async function verify(e: React.FormEvent) {
-    e.preventDefault();
-    setBusy(true);
-    try {
-      done(
-        await api<Me>("/auth/mfa/verify", {
-          body: { mfa_token: mfaToken, ...(useRecovery ? { recovery_code: code } : { code }) },
-        }),
-      );
-    } catch (err) {
-      toast.error(errorMessage(err));
-    } finally {
-      setBusy(false);
-    }
-  }
-
-  if (mfaToken) {
-    return (
-      <form onSubmit={verify} className="space-y-4">
-        <Field
-          label={useRecovery ? "Recovery code" : "6-digit code from your authenticator app"}
-          name="code"
-          autoComplete="one-time-code"
-          inputMode={useRecovery ? "text" : "numeric"}
-          autoFocus
-          value={code}
-          onChange={(e) => setCode(e.target.value)}
-        />
-        <Button className="w-full" type="submit" disabled={busy || !code}>
-          Verify
-        </Button>
-        <button type="button" className="w-full text-sm text-muted-foreground underline" onClick={() => setUseRecovery(!useRecovery)}>
-          {useRecovery ? "Use authenticator code" : "Use a recovery code instead"}
-        </button>
-      </form>
-    );
   }
 
   return (

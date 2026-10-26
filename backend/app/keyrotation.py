@@ -10,7 +10,6 @@ from .security.crypto import cipher
 # (table, primary key, column, AAD context) for every envelope-encrypted column
 ENCRYPTED_COLUMNS = [
     ("users", "id", "email_enc", "users.email"),
-    ("users", "id", "mfa_secret_enc", "users.mfa_secret"),
     ("user_profiles", "user_id", "phone_enc", "user_profiles.phone"),
     ("host_profiles", "user_id", "license_enc", "host_profiles.license"),
     ("host_profiles", "user_id", "payout_enc", "host_profiles.payout"),

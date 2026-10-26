@@ -110,7 +110,7 @@
   <text class="s" x="576" y="368">SQLAlchemy connection pool · Pydantic validation · RBAC decorators</text>
   <g>
     <rect class="chip" x="576" y="384" width="236" height="52" rx="8"/>
-    <text class="chipt" x="590" y="406">Auth</text><text class="s" x="590" y="425">Argon2id · JWT + refresh · TOTP</text>
+    <text class="chipt" x="590" y="406">Auth</text><text class="s" x="590" y="425">Argon2id · JWT + refresh</text>
     <rect class="chip" x="828" y="384" width="236" height="52" rx="8"/>
     <text class="chipt" x="842" y="406">Listings / Search</text><text class="s" x="842" y="425">full-text · spatial · keyset pages</text>
     <rect class="chip" x="576" y="446" width="236" height="52" rx="8"/>
@@ -258,7 +258,7 @@
   <g>
     <rect class="ent" x="50" y="900" width="180" height="90" rx="6"/><rect class="enth" x="50.6" y="900.6" width="178.8" height="24" rx="6"/>
     <text class="entt" x="60" y="917">users</text>
-    <text class="entc" x="60" y="942">public_id ULID</text><text class="entc" x="60" y="958">email_hash · pw_hash</text><text class="entc" x="60" y="974">role · mfa_secret_enc</text>
+    <text class="entc" x="60" y="942">public_id ULID</text><text class="entc" x="60" y="958">email_hash · pw_hash</text><text class="entc" x="60" y="974">role · status</text>
 
     <rect class="ent" x="280" y="900" width="180" height="90" rx="6"/><rect class="enth" x="280.6" y="900.6" width="178.8" height="24" rx="6"/>
     <text class="entt" x="290" y="917">host_profiles</text>
@@ -309,7 +309,7 @@
   <text class="h" x="1160" y="1020">Encryption summary</text>
   <text class="t" x="1160" y="1044">• Passwords: Argon2id · tokens: SHA-256 hashes, single-use</text>
   <text class="t" x="1160" y="1066">• PII fields: AES-256-GCM envelope (DEK per record, KEK in KMS)</text>
-  <text class="t" x="1160" y="1088">• Lookups: HMAC-SHA256 blind index · TOTP MFA for admins</text>
+  <text class="t" x="1160" y="1088">• Lookups: HMAC-SHA256 blind index</text>
   <text class="t" x="1160" y="1110">• Storage: InnoDB TDE · SSE-KMS buckets · encrypted backups</text>
   <text class="t" x="1160" y="1132">• Transit: TLS 1.3 edge, TLS-only MySQL, signed URLs</text>
 </svg>

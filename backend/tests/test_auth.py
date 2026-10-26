@@ -1,5 +1,3 @@
-import pyotp
-
 from app import db
 from app.security import crypto
 
@@ -69,20 +67,3 @@ def test_password_reset_token_is_single_use(client, make_user, monkeypatch):
 def test_forgot_password_does_not_reveal_accounts(client):
     r = client.post("/auth/forgot-password", json={"email": "nobody@nowhere.dev"})
     assert r.status_code == 202
-
-
-def test_mfa_enrolment_and_login(make_user, client):
-    u = make_user()
-    setup = u.post("/auth/mfa/setup").get_json()
-    code = pyotp.TOTP(setup["secret"]).now()
-    r = u.post("/auth/mfa/enable", json={"code": code})
-    assert r.status_code == 200 and len(r.get_json()["recovery_codes"]) == 8
-
-    r = client.post("/auth/login", json={"email": u.email, "password": PASSWORD})
-    assert r.get_json()["mfa_required"] is True
-    challenge = r.get_json()["mfa_token"]
-    # the code used during enrolment can't be replayed
-    assert client.post("/auth/mfa/verify", json={"mfa_token": challenge, "code": code}).status_code == 401
-    recovery = u.post("/auth/mfa/setup")  # already enabled
-    assert recovery.status_code == 409
-

@@ -23,7 +23,7 @@ export default function AccountPage() {
               <ProfileTab />
             </TabsContent>
             <TabsContent value="security" className="pt-4">
-              <SecurityTab me={me} />
+              <SecurityTab />
             </TabsContent>
             <TabsContent value="privacy" className="pt-4">
               <PrivacyTab />

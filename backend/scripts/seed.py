@@ -22,7 +22,7 @@ sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
 from ulid import ULID
 
 from app import create_app, db
-from app.security import crypto, mfa
+from app.security import crypto
 from app.security.passwords import hash_password
 
 ROOT = os.path.normpath(os.path.join(os.path.dirname(__file__), "..", ".."))
@@ -131,17 +131,14 @@ def check_ids(cur, table, first, n):
         raise RuntimeError(f"Unexpected id range in {table}: {lo}..{hi}, expected {first}..{first + n - 1}")
 
 
-def create_user(conn, email, name, roles, verified=True, mfa_secret=None):
+def create_user(conn, email, name, roles, verified=True):
     pid = str(ULID())
     cur = conn.cursor()
     cur.execute(
-        """INSERT INTO users (public_id, email_enc, email_hash, email_verified_at, password_hash,
-                              mfa_secret_enc, mfa_enabled_at)
-           VALUES (%s, %s, %s, %s, %s, %s, %s)""",
+        """INSERT INTO users (public_id, email_enc, email_hash, email_verified_at, password_hash)
+           VALUES (%s, %s, %s, %s, %s)""",
         (pid, crypto.encrypt(email, "users.email"), crypto.blind_index(email, "users.email"),
-         "2026-01-01" if verified else None, hash_password(DEMO_PASSWORD),
-         crypto.encrypt(mfa_secret, "users.mfa_secret") if mfa_secret else None,
-         "2026-01-01" if mfa_secret else None),
+         "2026-01-01" if verified else None, hash_password(DEMO_PASSWORD)),
     )
     uid = cur.lastrowid
     cur.executemany("INSERT INTO user_roles (user_id, role) VALUES (%s, %s)", [(uid, r) for r in roles])
@@ -272,8 +269,7 @@ def main():
         if cur.fetchone()[0]:
             sys.exit("Database already has users; seed only an empty database.")
 
-        admin_secret = mfa.new_secret()
-        create_user(conn, "admin@homenest.dev", "Avery Admin", ["admin", "guest"], mfa_secret=admin_secret)
+        create_user(conn, "admin@homenest.dev", "Avery Admin", ["admin", "guest"])
         gina = create_user(conn, "guest@homenest.dev", "Gina Guest", ["guest"])
         guests = [gina] + [create_user(conn, f"guest{i}@homenest.dev", f"Guest {i}", ["guest"]) for i in range(1, 21)]
 
@@ -355,9 +351,7 @@ def main():
         "listings": total,
         "seconds": round(time.time() - started, 1),
         "password_for_all_demo_accounts": DEMO_PASSWORD,
-        "accounts": ["admin@homenest.dev (admin, MFA on)", "host@homenest.dev (host)", "guest@homenest.dev (guest)"],
-        "admin_totp_secret": admin_secret,
-        "admin_totp_uri": mfa.provisioning_uri(admin_secret, "admin@homenest.dev"),
+        "accounts": ["admin@homenest.dev (admin)", "host@homenest.dev (host)", "guest@homenest.dev (guest)"],
     }, indent=2))
 
 

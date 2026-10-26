@@ -70,6 +70,4 @@ export interface Me {
   avatar_url: string | null;
   roles: Role[];
   email_verified: boolean;
-  mfa_enabled: boolean;
-  mfa_session: boolean;
 }

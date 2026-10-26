@@ -10,6 +10,7 @@ MySQL 8.0+ (developed on 9.3), InnoDB, utf8mb4. All SQL is hand-written in `db/`
 | `0004_stays` | blocked dates, price rules, bookings (generated column), payments, reviews; `CalcStaySubtotal`, `QuoteStay`, `CreateBooking`, `ConfirmBooking`, `CancelBooking`; overlap and review triggers; hold-expiry and completion events; date-aware search |
 | `0005_admin` | audit triggers on 8 tables, append-only guard, backups table, analytics procedures |
 | `0006_partitioning` | `audit_log` range-partitioned by year, partition maintenance procedure and event |
+| `0007_remove_mfa` | drops the TOTP columns from `users` and the `mfa` flag from `refresh_tokens`; recreates the users audit trigger without them |
 
 ## Entity overview
 

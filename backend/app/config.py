@@ -29,7 +29,6 @@ class Config:
     JWT_ACCESS_TTL = int(os.environ.get("JWT_ACCESS_TTL", 900))
     REFRESH_TTL_DAYS = int(os.environ.get("REFRESH_TTL_DAYS", 14))
     COOKIE_SECURE = _bool("COOKIE_SECURE", True)
-    ADMIN_REQUIRE_MFA = _bool("ADMIN_REQUIRE_MFA", True)
     REQUIRE_VERIFIED_EMAIL = _bool("REQUIRE_VERIFIED_EMAIL", True)
 
     FRONTEND_URL = os.environ.get("FRONTEND_URL", "http://localhost:3000")

@@ -1,7 +1,6 @@
 import io
 import json
 
-import pyotp
 from PIL import Image
 
 from app import db
@@ -15,13 +14,6 @@ LISTING = {
 }
 
 
-def admin_with_mfa(make_user):
-    admin = make_user(roles=("admin", "guest"))
-    secret = admin.post("/auth/mfa/setup").get_json()["secret"]
-    assert admin.post("/auth/mfa/enable", json={"code": pyotp.TOTP(secret).now()}).status_code == 200
-    return admin
-
-
 def jpeg_with_gps():
     img = Image.new("RGB", (800, 600), "teal")
     exif = Image.Exif()
@@ -33,11 +25,9 @@ def jpeg_with_gps():
     return buf
 
 
-def test_admin_needs_mfa(make_user):
-    admin = make_user(roles=("admin", "guest"))
-    r = admin.get("/admin/kpis")
-    assert r.status_code == 403 and r.get_json()["error"]["code"] == "mfa_setup_required"
-    assert admin_with_mfa(make_user).get("/admin/kpis").status_code == 200
+def test_admin_console_requires_admin_role(make_user):
+    assert make_user(roles=("host", "guest")).get("/admin/kpis").status_code == 403
+    assert make_user(roles=("admin", "guest")).get("/admin/kpis").status_code == 200
 
 
 def test_listing_lifecycle_with_moderation_and_audit(make_user, client, tmp_path, app):
@@ -56,7 +46,7 @@ def test_listing_lifecycle_with_moderation_and_audit(make_user, client, tmp_path
     assert host.post(f"/host/listings/{pid}/status", json={"action": "submit"}).get_json()["status"] == "pending_review"
     assert client.get(f"/listings/{pid}").status_code == 404  # not public until approved
 
-    admin = admin_with_mfa(make_user)
+    admin = make_user(roles=("admin", "guest"))
     assert pid in [l["public_id"] for l in admin.get("/admin/listings").get_json()]
     assert admin.post(f"/admin/listings/{pid}/moderate", json={"decision": "reject"}).status_code == 422
     assert admin.post(f"/admin/listings/{pid}/moderate", json={"decision": "approve"}).get_json()["status"] == "published"
@@ -105,7 +95,7 @@ def test_encrypted_backup_round_trip(make_user, app, tmp_path):
 
     app.config["BACKUP_DIR"] = str(tmp_path)
     app.config["BACKUP_DATABASE_URL"] = TEST_URL.replace("mysql+pymysql", "mysql").split("?")[0]
-    admin = admin_with_mfa(make_user)
+    admin = make_user(roles=("admin", "guest"))
     r = admin.post("/admin/backups")
     assert r.status_code == 202
     b = admin.get("/admin/backups").get_json()[0]

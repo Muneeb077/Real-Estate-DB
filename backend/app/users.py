@@ -1,8 +1,6 @@
 """
 User helpers shared by the auth, profile and admin endpoints.
 """
-from flask import g
-
 from . import db
 from .security import crypto
 
@@ -16,7 +14,7 @@ def get_email(user_id):
     return crypto.decrypt(row["email_enc"], "users.email") if row else None
 
 
-def me_payload(user, mfa_session=None):
+def me_payload(user):
     return {
         "public_id": user["public_id"],
         "email": get_email(user["id"]),
@@ -24,8 +22,6 @@ def me_payload(user, mfa_session=None):
         "avatar_url": user["avatar_url"],
         "roles": sorted(user["roles"]),
         "email_verified": bool(user["email_verified_at"]),
-        "mfa_enabled": bool(user["mfa_enabled_at"]),
-        "mfa_session": bool(g.get("mfa") if mfa_session is None else mfa_session),
     }
 
 

@@ -16,7 +16,7 @@ CSRF_EXEMPT_PATHS = {"/api/v1/payments/stripe/webhook"}
 
 def load_user(user_id):
     row = db.one(
-        """SELECT u.id, u.public_id, u.status, u.email_verified_at, u.mfa_enabled_at,
+        """SELECT u.id, u.public_id, u.status, u.email_verified_at,
                   p.display_name, p.avatar_url,
                   (SELECT GROUP_CONCAT(role) FROM user_roles r WHERE r.user_id = u.id) AS roles
            FROM users u LEFT JOIN user_profiles p ON p.user_id = u.id
@@ -34,7 +34,6 @@ def authenticate_request():
     before_request hook: resolves g.user from the access cookie and enforces CSRF.
     """
     g.user = None
-    g.mfa = False
     token = request.cookies.get(tokens.ACCESS_COOKIE)
     if token:
         claims = tokens.decode(token)
@@ -42,7 +41,6 @@ def authenticate_request():
             user = load_user(int(claims["sub"]))
             if user and user["status"] == "active":
                 g.user = user
-                g.mfa = bool(claims.get("mfa"))
 
     if request.method not in SAFE_METHODS and request.path not in CSRF_EXEMPT_PATHS:
         cookie = request.cookies.get(tokens.CSRF_COOKIE)
@@ -78,11 +76,6 @@ def roles_required(*roles):
         def wrapper(*args, **kwargs):
             if not g.user["roles"] & set(roles):
                 raise ApiError(403, "forbidden", "You do not have access to this resource.")
-            if "admin" in roles and roles == ("admin",) and current_app.config["ADMIN_REQUIRE_MFA"]:
-                if not g.user["mfa_enabled_at"]:
-                    raise ApiError(403, "mfa_setup_required", "Admins must enable two-factor authentication.")
-                if not g.mfa:
-                    raise ApiError(403, "mfa_required", "Sign in again with your authenticator code.")
             return view(*args, **kwargs)
         return wrapper
     return decorator
