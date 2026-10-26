@@ -33,7 +33,7 @@ jobs:
           cache: pip
           cache-dependency-path: backend/requirements*.txt
       - run: pip install -r requirements-dev.txt
-      - name: Tests (real MySQL: procedures, triggers, TLS, encryption)
+      - name: "Tests (real MySQL: procedures, triggers, TLS, encryption)"
         run: pytest -q
       - name: Dependency audit
         run: pip-audit -r requirements.txt
