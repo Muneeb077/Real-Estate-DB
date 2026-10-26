@@ -1,6 +1,6 @@
 # HomeNest: real estate marketplace (MySQL, encryption, Next.js)
 
-Buy, rent long-term, or book a stay. Anyone can browse **50,000 listings** in 34 cities on a map, with no account needed. Guests save homes, message hosts, make offers and book stays. Hosts manage listings, calendars and earnings. Admins moderate content and work from an MFA-protected console.
+Buy, rent long-term, or book a stay. Anyone can browse **50,000 listings** in 34 cities on a map, with no account needed. Guests save homes, message hosts, make offers and book stays. Hosts manage listings, calendars and earnings. Admins moderate content and work from an admin console.
 
 ![System design](docs/system-design.png)
 
@@ -15,11 +15,11 @@ Buy, rent long-term, or book a stay. Anyone can browse **50,000 listings** in 34
 
 **Anyone (no account):** home page with hero search; search with filters (type, price, beds, baths, guests, amenities, full-text keywords, dates); infinite scroll; a Leaflet map with price pins and "search as I move the map"; listing pages with gallery, amenities, an approximate-area map and reviews; host profiles.
 
-**Guests:** sign-up with email verification; login with optional TOTP; wishlist; saved searches with email alerts; encrypted messaging with hosts; viewing requests; purchase offers and rental applications; stay booking with a live quote, a 30-minute hold and payment (simulated, or Stripe Checkout when keys are set); trip page that reveals the exact address and host phone only after confirmation; cancellation with refund policy; reviews; notifications; account security (password, MFA with QR code, sessions); GDPR-style data export; account deletion.
+**Guests:** sign-up with email verification; login; wishlist; saved searches with email alerts; encrypted messaging with hosts; viewing requests; purchase offers and rental applications; stay booking with a live quote, a 30-minute hold and payment (simulated, or Stripe Checkout when keys are set); trip page that reveals the exact address and host phone only after confirmation; cancellation with refund policy; reviews; notifications; account security (password, sessions); GDPR-style data export; account deletion.
 
 **Hosts:** onboarding with encrypted license and phone; a listing editor with map pin, amenities and optimistic locking; photo upload (validated, EXIF-stripped, WebP); blocked dates; seasonal and weekend price rules; submit for review, pause and archive; offers and viewings inbox (accepting an offer closes the sale atomically); bookings; earnings dashboard.
 
-**Admins** (role plus a TOTP-verified session): platform KPIs and GMV charts; top hosts; median price by city; listing moderation queue; host verification (decrypted license, view audited); user reports; review hiding; user management (roles, suspension, blind-index email search); audit log viewer; platform settings; one-click encrypted backups.
+**Admins** (admin role): platform KPIs and GMV charts; top hosts; median price by city; listing moderation queue; host verification (decrypted license, view audited); user reports; review hiding; user management (roles, suspension, blind-index email search); audit log viewer; platform settings; one-click encrypted backups.
 
 ## Run it locally
 
@@ -42,7 +42,7 @@ mysql -uroot -p < ../db/security/grants_after_migrate.sql
 cd ../frontend && npm ci && npm run dev    # http://localhost:3000
 ```
 
-Demo accounts (password `HomeNest-demo-2026`): `guest@homenest.dev`, `host@homenest.dev`, and `admin@homenest.dev`. The admin account has MFA enabled; the seed prints its TOTP secret and `otpauth://` URI for your authenticator app. Without SMTP configured, verification and reset links are printed in the API log.
+Demo accounts (password `HomeNest-demo-2026`): `guest@homenest.dev`, `host@homenest.dev`, and `admin@homenest.dev`. Without SMTP configured, verification and reset links are printed in the API log.
 
 **Full stack in Docker** (Nginx with TLS, 2 API replicas, worker, scheduler, Redis, and MySQL with TDE and TLS-only connections):
 
@@ -60,14 +60,14 @@ docker compose --env-file .env.docker run --rm api python3.12 scripts/seed.py
 cd backend && TEST_DATABASE_URL=mysql+pymysql://root@127.0.0.1:3306/homenest_test .venv/bin/pytest -q
 ```
 
-There are 31 tests, run against a real MySQL rebuilt from the migrations. Nothing in the database is mocked. They cover a concurrent double-booking race, atomic offer acceptance, refresh-token reuse detection, single-use reset tokens, TOTP replay protection, admin MFA gating, optimistic locking, host isolation, ciphertext at rest (email, phone, messages), KEK rotation, append-only audit, EXIF stripping, encrypted-backup round trip with tamper detection, date-aware search, review constraints and saved-search alerts. CI (`.github/workflows/ci.yml`) runs them with lint, a production build and dependency audits; `pip-audit` and `npm audit` are clean.
+There are 30 tests, run against a real MySQL rebuilt from the migrations. Nothing in the database is mocked. They cover a concurrent double-booking race, atomic offer acceptance, refresh-token reuse detection, single-use reset tokens, admin role gating, optimistic locking, host isolation, ciphertext at rest (email, phone, messages), KEK rotation, append-only audit, EXIF stripping, encrypted-backup round trip with tamper detection, date-aware search, review constraints and saved-search alerts. CI (`.github/workflows/ci.yml`) runs them with lint, a production build and dependency audits; `pip-audit` and `npm audit` are clean.
 
 **Load test** (`make loadtest`, Locust, public read path): 300 concurrent users, 15,384 requests, **0 failures, p95 8 ms, p99 17 ms**, about 257 req/s. This was measured on a laptop: 8 gunicorn workers, local MySQL, in-process cache, no Redis.
 
 ## Repository layout
 
 ```
-backend/            Flask API: app/api (blueprints), app/security (crypto, tokens, RBAC, MFA),
+backend/            Flask API: app/api (blueprints), app/security (crypto, tokens, RBAC),
                     migrations (Alembic, runs db/*.sql), scripts (seed, rotate keys, decrypt backup),
                     tests, loadtest
 db/                 hand-written SQL: schema/, procedures/, views/, events/, security/ (grants, TDE)

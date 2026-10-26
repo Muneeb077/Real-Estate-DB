@@ -28,26 +28,16 @@ def _now():
     return datetime.now(timezone.utc)
 
 
-def issue_access_token(user, mfa=False):
+def issue_access_token(user):
     now = _now()
     payload = {
         "sub": str(user["id"]),
         "pid": user["public_id"],
-        "mfa": bool(mfa),
         "iat": now,
         "exp": now + timedelta(seconds=current_app.config["JWT_ACCESS_TTL"]),
         "jti": secrets.token_hex(8),
         "typ": "access",
     }
-    return jwt.encode(payload, current_app.config["SECRET_KEY"], algorithm="HS256")
-
-
-def issue_purpose_token(user_id, purpose, ttl_seconds):
-    """
-    Short-lived signed token for a single step (e.g. the MFA challenge after a correct password).
-    """
-    now = _now()
-    payload = {"sub": str(user_id), "typ": purpose, "iat": now, "exp": now + timedelta(seconds=ttl_seconds)}
     return jwt.encode(payload, current_app.config["SECRET_KEY"], algorithm="HS256")
 
 
@@ -59,12 +49,12 @@ def decode(token, expected_type="access"):
     return payload if payload.get("typ") == expected_type else None
 
 
-def issue_refresh_token(user_id, mfa, user_agent=None, ip=None, family_id=None, conn=None):
+def issue_refresh_token(user_id, user_agent=None, ip=None, family_id=None, conn=None):
     token = secrets.token_urlsafe(32)
     db.execute(
-        """INSERT INTO refresh_tokens (user_id, family_id, token_hash, mfa, user_agent, ip, expires_at)
-           VALUES (:u, :f, :h, :m, :ua, :ip, NOW() + INTERVAL :days DAY)""",
-        {"u": user_id, "f": family_id or str(ULID()), "h": sha256(token), "m": mfa,
+        """INSERT INTO refresh_tokens (user_id, family_id, token_hash, user_agent, ip, expires_at)
+           VALUES (:u, :f, :h, :ua, :ip, NOW() + INTERVAL :days DAY)""",
+        {"u": user_id, "f": family_id or str(ULID()), "h": sha256(token),
          "ua": (user_agent or "")[:255], "ip": ip, "days": current_app.config["REFRESH_TTL_DAYS"]},
         conn=conn,
     )
@@ -73,7 +63,7 @@ def issue_refresh_token(user_id, mfa, user_agent=None, ip=None, family_id=None, 
 
 def rotate_refresh_token(token, user_agent=None, ip=None):
     """
-    Returns (user_id, mfa, new_token) or None. Reuse of a rotated token revokes the family.
+    Returns (user_id, new_token) or None. Reuse of a rotated token revokes the family.
     """
     with db.transaction() as conn:
         row = db.one("SELECT *, expires_at > NOW() AS live FROM refresh_tokens WHERE token_hash = :h FOR UPDATE",
@@ -87,8 +77,8 @@ def rotate_refresh_token(token, user_agent=None, ip=None):
         if not row["live"]:
             return None
         db.execute("UPDATE refresh_tokens SET revoked_at = NOW() WHERE id = :id", {"id": row["id"]}, conn=conn)
-        new = issue_refresh_token(row["user_id"], bool(row["mfa"]), user_agent, ip, row["family_id"], conn=conn)
-        return row["user_id"], bool(row["mfa"]), new
+        new = issue_refresh_token(row["user_id"], user_agent, ip, row["family_id"], conn=conn)
+        return row["user_id"], new
 
 
 def revoke_refresh_token(token):

@@ -51,7 +51,7 @@ def _rebuild_database():
 def app():
     _rebuild_database()
     from app import create_app
-    application = create_app({"TESTING": True, "REQUIRE_VERIFIED_EMAIL": True, "ADMIN_REQUIRE_MFA": True})
+    application = create_app({"TESTING": True, "REQUIRE_VERIFIED_EMAIL": True})
     with application.app_context():
         yield application
 

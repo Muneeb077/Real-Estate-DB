@@ -23,7 +23,6 @@ type User = {
   status: string;
   roles: string[];
   verified: boolean;
-  mfa: boolean;
   created_at: string;
   last_seen: string | null;
 };
@@ -129,7 +128,7 @@ function Users() {
                   </div>
                 </TableCell>
                 <TableCell className="text-xs">
-                  {u.verified ? "Email verified" : "Unverified"} · {u.mfa ? "MFA on" : "No MFA"}
+                  {u.verified ? "Email verified" : "Unverified"}
                 </TableCell>
                 <TableCell className="text-sm">{shortDate(u.created_at)}</TableCell>
                 <TableCell>

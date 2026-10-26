@@ -212,7 +212,7 @@ def delete_account():
     with db.transaction() as conn:
         db.execute(
             """UPDATE users SET status = 'deleted', deleted_at = NOW(), email_enc = :e, email_hash = :h,
-                      password_hash = '!', mfa_secret_enc = NULL, mfa_enabled_at = NULL, mfa_recovery_hashes = NULL
+                      password_hash = '!'
                WHERE id = :id""",
             {"e": crypto.encrypt(placeholder, "users.email"), "h": crypto.blind_index(placeholder, "users.email"),
              "id": uid}, conn=conn)

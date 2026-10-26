@@ -1,6 +1,5 @@
 """
-Admin console API. Every route requires the admin role AND a session that passed
-TOTP (see rbac.roles_required). Writes are attributed via @actor_id and recorded
+Admin console API. Every route requires the admin role (see rbac.roles_required). Writes are attributed via @actor_id and recorded
 by the audit triggers; reading decrypted PII is logged explicitly here.
 """
 import json
@@ -99,7 +98,7 @@ def users():
         params["status"] = status
     rows = db.query(
         f"""SELECT u.id, u.public_id, u.email_enc, u.status, u.email_verified_at IS NOT NULL AS verified,
-                   u.mfa_enabled_at IS NOT NULL AS mfa, u.created_at, p.display_name, p.avatar_url,
+                   u.created_at, p.display_name, p.avatar_url,
                    (SELECT GROUP_CONCAT(role ORDER BY role) FROM user_roles r WHERE r.user_id = u.id) AS roles,
                    (SELECT MAX(created_at) FROM refresh_tokens t WHERE t.user_id = u.id) AS last_seen
             FROM users u JOIN user_profiles p ON p.user_id = u.id
@@ -108,7 +107,7 @@ def users():
     for r in rows:
         r["email"] = crypto.decrypt(r.pop("email_enc"), "users.email")
         r["roles"] = (r["roles"] or "").split(",")
-        r["verified"], r["mfa"] = bool(r["verified"]), bool(r["mfa"])
+        r["verified"] = bool(r["verified"])
         r.pop("id")
     _audit("pii.view", "user", data={"view": "user_list", "count": len(rows), "query": q[:50]})
     return jsonify(rows)

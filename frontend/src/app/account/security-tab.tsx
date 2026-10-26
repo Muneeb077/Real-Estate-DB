@@ -1,8 +1,7 @@
 "use client";
 
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { LaptopIcon, ShieldCheckIcon } from "lucide-react";
-import { QRCodeSVG } from "qrcode.react";
+import { LaptopIcon } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
 
@@ -12,15 +11,13 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { api, errorMessage } from "@/lib/api";
 import { shortDate } from "@/lib/format";
-import type { Me } from "@/lib/types";
 
 type Session = { family_id: string; user_agent: string; ip: string; signed_in_at: string; last_active_at: string; current: boolean };
 
-export function SecurityTab({ me }: { me: Me }) {
+export function SecurityTab() {
   return (
     <div className="space-y-6">
       <ChangePassword />
-      <TwoFactor me={me} />
       <Sessions />
     </div>
   );
@@ -60,114 +57,6 @@ function ChangePassword() {
             </Button>
           </div>
         </form>
-      </CardContent>
-    </Card>
-  );
-}
-
-function TwoFactor({ me }: { me: Me }) {
-  const qc = useQueryClient();
-  const [setup, setSetup] = useState<{ secret: string; otpauth_uri: string } | null>(null);
-  const [code, setCode] = useState("");
-  const [password, setPassword] = useState("");
-  const [recovery, setRecovery] = useState<string[] | null>(null);
-
-  const start = useMutation({
-    mutationFn: () => api<{ secret: string; otpauth_uri: string }>("/auth/mfa/setup", { method: "POST" }),
-    onSuccess: setSetup,
-    onError: (e) => toast.error(errorMessage(e)),
-  });
-  const enable = useMutation({
-    mutationFn: () => api<Me & { recovery_codes: string[] }>("/auth/mfa/enable", { body: { code } }),
-    onSuccess: (res) => {
-      setRecovery(res.recovery_codes);
-      setSetup(null);
-      setCode("");
-      qc.invalidateQueries({ queryKey: ["me"] });
-    },
-    onError: (e) => toast.error(errorMessage(e)),
-  });
-  const disable = useMutation({
-    mutationFn: () => api("/auth/mfa/disable", { body: { password, code } }),
-    onSuccess: () => {
-      toast.success("Two-factor authentication turned off");
-      setCode("");
-      setPassword("");
-      qc.invalidateQueries({ queryKey: ["me"] });
-    },
-    onError: (e) => toast.error(errorMessage(e)),
-  });
-
-  return (
-    <Card>
-      <CardHeader>
-        <CardTitle className="flex items-center gap-2">
-          Two-factor authentication
-          {me.mfa_enabled && (
-            <Badge className="bg-emerald-600 text-white">
-              <ShieldCheckIcon /> On
-            </Badge>
-          )}
-        </CardTitle>
-        <CardDescription>
-          Time-based one-time codes (TOTP). Required for admins. The secret is encrypted at rest and codes can&apos;t be
-          replayed.
-        </CardDescription>
-      </CardHeader>
-      <CardContent className="space-y-4">
-        {recovery && (
-          <div className="rounded-lg border border-amber-500/40 bg-amber-500/10 p-4">
-            <p className="font-medium">Save these recovery codes now. They won&apos;t be shown again.</p>
-            <ul className="mt-2 grid grid-cols-2 gap-1 font-mono text-sm">
-              {recovery.map((c) => (
-                <li key={c}>{c}</li>
-              ))}
-            </ul>
-          </div>
-        )}
-        {me.mfa_enabled ? (
-          <form
-            className="grid gap-4 sm:grid-cols-3"
-            onSubmit={(e) => {
-              e.preventDefault();
-              disable.mutate();
-            }}
-          >
-            <Field label="Password" type="password" name="mfa-pw" value={password} onChange={(e) => setPassword(e.target.value)} />
-            <Field label="Current code" name="mfa-code" inputMode="numeric" value={code} onChange={(e) => setCode(e.target.value)} />
-            <div className="flex items-end">
-              <Button variant="destructive" type="submit" disabled={!password || !code}>
-                Turn off
-              </Button>
-            </div>
-          </form>
-        ) : setup ? (
-          <div className="flex flex-col gap-6 sm:flex-row">
-            <div className="rounded-lg bg-white p-3">
-              <QRCodeSVG value={setup.otpauth_uri} size={160} />
-            </div>
-            <form
-              className="flex-1 space-y-3"
-              onSubmit={(e) => {
-                e.preventDefault();
-                enable.mutate();
-              }}
-            >
-              <p className="text-sm text-muted-foreground">
-                Scan with Google Authenticator, 1Password or Authy, or enter{" "}
-                <code className="rounded bg-muted px-1">{setup.secret}</code>
-              </p>
-              <Field label="Enter the 6-digit code" name="enable-code" inputMode="numeric" autoComplete="one-time-code" value={code} onChange={(e) => setCode(e.target.value)} />
-              <Button type="submit" disabled={code.length < 6 || enable.isPending}>
-                Turn on
-              </Button>
-            </form>
-          </div>
-        ) : (
-          <Button onClick={() => start.mutate()} disabled={start.isPending}>
-            Set up authenticator app
-          </Button>
-        )}
       </CardContent>
     </Card>
   );
