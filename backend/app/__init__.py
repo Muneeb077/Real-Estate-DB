@@ -37,7 +37,9 @@ def create_app(overrides=None):
     db.init_app(app)
     crypto.init_app(app)
     cache.init_app(app)
-    app.config["RATELIMIT_ENABLED"] = not app.config.get("TESTING") or app.config.get("RATELIMIT_ENABLED", False)
+    # off in tests and load tests (all simulated users share one IP); on everywhere else
+    app.config["RATELIMIT_ENABLED"] = (not app.config.get("TESTING")
+                                       and os.environ.get("RATELIMIT_ENABLED", "true").lower() != "false")
     limiter.init_app(app)
     errors.register(app)
     app.before_request(authenticate_request)

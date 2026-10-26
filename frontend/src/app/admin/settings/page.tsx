@@ -2,7 +2,7 @@
 
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { DatabaseBackupIcon, DownloadIcon, LockIcon } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { toast } from "sonner";
 
 import { AdminShell } from "@/components/admin/admin-shell";
@@ -31,12 +31,14 @@ export default function AdminSettingsPage() {
 }
 
 function PlatformSettings() {
-  const qc = useQueryClient();
   const { data } = useQuery({ queryKey: ["admin-settings"], queryFn: () => api<Settings>("/admin/settings") });
-  const [s, setS] = useState<Settings | null>(null);
-  useEffect(() => {
-    if (data) setS(data);
-  }, [data]);
+  if (!data) return <div className="h-64 animate-pulse rounded-xl bg-muted" />;
+  return <SettingsForm initial={data} />;
+}
+
+function SettingsForm({ initial }: { initial: Settings }) {
+  const qc = useQueryClient();
+  const [s, setS] = useState<Settings>(initial);
   const save = useMutation({
     mutationFn: () => api<Settings>("/admin/settings", { method: "PATCH", body: s }),
     onSuccess: (d) => {
@@ -45,7 +47,6 @@ function PlatformSettings() {
     },
     onError: (e) => toast.error(errorMessage(e)),
   });
-  if (!s) return <div className="h-64 animate-pulse rounded-xl bg-muted" />;
   return (
     <Card>
       <CardHeader>

@@ -22,30 +22,30 @@ function FitToResults({
   listings,
   enabled,
   fitKey,
-  programmatic,
+  programmaticRef,
 }: {
   listings: ListingCard[];
   enabled: boolean;
   fitKey: string;
-  programmatic: React.RefObject<boolean>;
+  programmaticRef: React.RefObject<boolean>;
 }) {
   const map = useMap();
   const fittedFor = useRef<string | null>(null);
   useEffect(() => {
     if (!enabled || fittedFor.current === fitKey || listings.length === 0) return;
-    programmatic.current = true;
+    programmaticRef.current = true;
     map.fitBounds(L.latLngBounds(listings.map((l) => [l.lat, l.lng] as [number, number])), { padding: [40, 40] });
     fittedFor.current = fitKey;
-  }, [enabled, fitKey, listings, map, programmatic]);
+  }, [enabled, fitKey, listings, map, programmaticRef]);
   return null;
 }
 
-function BoundsWatcher({ onMove, programmatic }: { onMove?: (b: Bounds) => void; programmatic: React.RefObject<boolean> }) {
+function BoundsWatcher({ onMove, programmaticRef }: { onMove?: (b: Bounds) => void; programmaticRef: React.RefObject<boolean> }) {
   useMapEvents({
     moveend(e) {
       // moves we caused (fitting results) must not trigger a new search
-      if (programmatic.current) {
-        programmatic.current = false;
+      if (programmaticRef.current) {
+        programmaticRef.current = false;
         return;
       }
       if (!onMove) return;
@@ -81,15 +81,15 @@ export default function ListingsMap({
     // eslint-disable-next-line react-hooks/exhaustive-deps
     [],
   );
-  const programmatic = useRef(false);
+  const programmaticRef = useRef(false);
   return (
     <MapContainer center={start} zoom={zoom} scrollWheelZoom className={className}>
       <TileLayer
         attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
         url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
       />
-      <FitToResults listings={listings} enabled={fitOnLoad} fitKey={fitKey} programmatic={programmatic} />
-      <BoundsWatcher onMove={onMove} programmatic={programmatic} />
+      <FitToResults listings={listings} enabled={fitOnLoad} fitKey={fitKey} programmaticRef={programmaticRef} />
+      <BoundsWatcher onMove={onMove} programmaticRef={programmaticRef} />
       {listings.map((l) => (
         <Marker
           key={l.public_id}

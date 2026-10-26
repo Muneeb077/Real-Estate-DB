@@ -1,6 +1,8 @@
 "use client";
 
+import { useQueryClient } from "@tanstack/react-query";
 import { DownloadIcon } from "lucide-react";
+import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { toast } from "sonner";
 
@@ -11,6 +13,8 @@ import { api, errorMessage } from "@/lib/api";
 
 export function PrivacyTab() {
   const [password, setPassword] = useState("");
+  const router = useRouter();
+  const qc = useQueryClient();
   return (
     <div className="space-y-6">
       <Card>
@@ -39,7 +43,9 @@ export function PrivacyTab() {
               if (!confirm("Delete your account permanently?")) return;
               try {
                 await api("/me", { method: "DELETE", body: { password } });
-                window.location.href = "/";
+                qc.clear();
+                qc.setQueryData(["me"], null);
+                router.push("/");
               } catch (err) {
                 toast.error(errorMessage(err));
               }

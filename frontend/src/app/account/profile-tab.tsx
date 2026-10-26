@@ -2,7 +2,7 @@
 
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { LockIcon } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { toast } from "sonner";
 
 import { Field } from "@/components/auth/field";
@@ -15,12 +15,14 @@ import { api, errorMessage } from "@/lib/api";
 type Profile = { display_name: string; bio: string | null; avatar_url: string | null; phone: string | null };
 
 export function ProfileTab() {
-  const qc = useQueryClient();
   const { data } = useQuery({ queryKey: ["profile"], queryFn: () => api<Profile>("/me/profile") });
-  const [form, setForm] = useState<Profile | null>(null);
-  useEffect(() => {
-    if (data) setForm(data);
-  }, [data]);
+  if (!data) return <div className="h-48 animate-pulse rounded-xl bg-muted" />;
+  return <ProfileForm initial={data} />;
+}
+
+function ProfileForm({ initial }: { initial: Profile }) {
+  const qc = useQueryClient();
+  const [form, setForm] = useState<Profile>(initial);
 
   const save = useMutation({
     mutationFn: (p: Profile) =>
@@ -36,7 +38,6 @@ export function ProfileTab() {
     onError: (e) => toast.error(errorMessage(e)),
   });
 
-  if (!form) return <div className="h-48 animate-pulse rounded-xl bg-muted" />;
   return (
     <Card>
       <CardHeader>

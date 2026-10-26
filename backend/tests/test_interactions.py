@@ -66,3 +66,21 @@ def test_unknown_fields_are_rejected(make_user):
     u = make_user()
     r = u.patch("/me/profile", json={"display_name": "Ok", "role": "admin"})
     assert r.status_code == 422
+
+
+def test_saved_search_alert_finds_new_listings(make_user, make_listing, monkeypatch):
+    from app.alerts import run_saved_search_alerts
+    guest = make_user()
+    r = guest.post("/me/saved-searches", json={"name": "Alertville stays", "query": {"city": "Alertville", "mode": "short_term_stay"}})
+    assert r.status_code == 201
+    db.execute("UPDATE saved_searches SET last_notified_at = NOW() - INTERVAL 1 DAY WHERE user_id = :u", {"u": guest.user_id})
+    host = make_user(roles=("host", "guest"))
+    listing = make_listing(host.user_id, city="Alertville")
+    db.execute("UPDATE listings SET published_at = NOW() WHERE id = :id", {"id": listing["id"]})
+    sent = []
+    monkeypatch.setattr("app.alerts.enqueue", lambda f, to, subject, text: sent.append((to, text)))
+    assert run_saved_search_alerts() >= 1
+    assert any(to == guest.email and listing["public_id"] in text for to, text in sent)
+    sent.clear()
+    run_saved_search_alerts()
+    assert not [s for s in sent if s[0] == guest.email]  # nothing new the second time

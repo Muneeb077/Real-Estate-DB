@@ -46,7 +46,7 @@ class Config:
     STRIPE_SECRET_KEY = os.environ.get("STRIPE_SECRET_KEY")
     STRIPE_WEBHOOK_SECRET = os.environ.get("STRIPE_WEBHOOK_SECRET")
     SENTRY_DSN = os.environ.get("SENTRY_DSN")
-    RATELIMIT_STORAGE_URI = os.environ.get("REDIS_URL", "memory://")
+    RATELIMIT_STORAGE_URI = os.environ.get("REDIS_URL") or "memory://"
     CACHE_TTL = int(os.environ.get("CACHE_TTL", 60))
 
     TESTING = False

@@ -82,7 +82,7 @@ def search():
         min_lat, max_lat = max(min_lat, -85), min(max_lat, 85)
         min_lng, max_lng = max(min_lng, -180), min(max_lng, 180)
     near_lat, near_lng = _coords(p.near, 2)
-    cursor_value, cursor_id = decode_cursor(p.cursor)
+    cursor_value, cursor_id = decode_cursor(p.cursor, p.sort)
 
     key = f"search:{cache.version('listings')}:{sorted(p.model_dump(exclude_none=True).items())}"
     cached = cache.get(key)
@@ -94,7 +94,7 @@ def search():
         p.amenities, min_lat, min_lng, max_lat, max_lng, near_lat, near_lng, p.radius_km,
         p.check_in, p.check_out, p.sort, cursor_value, cursor_id, p.limit + 1,
     ], read=True)
-    result = page(rows, p.limit)
+    result = page(rows, p.limit, p.sort)
     cache.set(key, result)
     return jsonify(result)
 

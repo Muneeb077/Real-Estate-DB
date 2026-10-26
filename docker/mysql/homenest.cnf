@@ -1,0 +1,14 @@
+[mysqld]
+# Encryption in transit: refuse any non-TLS client (certs are auto-generated in the datadir;
+# mount real ones with ssl_ca / ssl_cert / ssl_key in production).
+require_secure_transport = ON
+tls_version = TLSv1.2,TLSv1.3
+
+# Triggers/routines are created by the migrator account, which has no SUPER.
+log_bin_trust_function_creators = 1
+
+event_scheduler = ON
+character_set_server = utf8mb4
+collation_server = utf8mb4_0900_ai_ci
+innodb_buffer_pool_size = 512M
+max_connections = 300

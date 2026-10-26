@@ -5,7 +5,8 @@ work with both `mysql < file.sql` and the Alembic migrations.
 import os
 import re
 
-DB_DIR = os.path.normpath(os.path.join(os.path.dirname(__file__), "..", "..", "db"))
+# repo layout: backend/app -> ../../db ; container layout: /app/app -> /db
+DB_DIR = os.environ.get("DB_SQL_DIR") or os.path.normpath(os.path.join(os.path.dirname(__file__), "..", "..", "db"))
 
 
 def split_statements(sql):

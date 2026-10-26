@@ -8,3 +8,5 @@ node_modules/
 .pytest_cache/
 backups/
 uploads/
+.env.docker
+docker/nginx/certs/

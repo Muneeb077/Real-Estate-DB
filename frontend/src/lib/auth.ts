@@ -1,6 +1,7 @@
 "use client";
 
 import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useRouter } from "next/navigation";
 
 import { api, ApiError } from "./api";
 import type { Me, Role } from "./types";
@@ -34,9 +35,12 @@ export function hasRole(me: Me | null | undefined, role: Role) {
 
 export function useLogout() {
   const qc = useQueryClient();
+  const router = useRouter();
   return async () => {
     await api("/auth/logout", { method: "POST" }).catch(() => undefined);
     qc.clear();
-    window.location.href = "/";
+    qc.setQueryData(["me"], null);
+    router.push("/");
+    router.refresh();
   };
 }

@@ -104,3 +104,12 @@ def test_search_by_dates_excludes_booked_listings(make_user, make_listing, clien
     assert found == {free["public_id"]}
     found = {i["public_id"] for i in client.get(f"/listings?city={city}&check_in={d(33)}&check_out={d(35)}").get_json()["items"]}
     assert found == {free["public_id"], booked["public_id"]}  # check-out day is free again
+
+
+def test_cursor_is_bound_to_its_sort_order(client):
+    first = client.get("/listings?sort=price_asc&limit=1").get_json()
+    if first["next_cursor"]:
+        ok = client.get(f"/listings?sort=price_asc&limit=1&cursor={first['next_cursor']}")
+        assert ok.status_code == 200
+        bad = client.get(f"/listings?sort=newest&limit=1&cursor={first['next_cursor']}")
+        assert bad.status_code == 400 and bad.get_json()["error"]["code"] == "bad_cursor"

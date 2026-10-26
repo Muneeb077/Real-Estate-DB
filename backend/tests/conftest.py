@@ -28,7 +28,7 @@ os.environ.update({
     "REDIS_URL": "",
     "SMTP_URL": "",
     "STRIPE_SECRET_KEY": "",
-    "DB_SSL_REQUIRED": "false",
+    "DB_SSL_REQUIRED": os.environ.get("TEST_DB_SSL", "true"),
 })
 
 
