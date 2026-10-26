@@ -4,8 +4,9 @@ from app.sqlrunner import run_file
 
 
 def _exec(stmt):
-    # exec_driver_sql skips SQLAlchemy's :bind parsing, so SQL text is sent verbatim.
-    op.get_bind().exec_driver_sql(stmt)
+    # exec_driver_sql skips SQLAlchemy's :bind parsing; PyMySQL still applies
+    # %-formatting, so literal % (e.g. DATE_FORMAT '%Y-%m') is escaped.
+    op.get_bind().exec_driver_sql(stmt.replace("%", "%%"))
 
 
 def run_sql(*paths):

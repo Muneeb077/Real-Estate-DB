@@ -19,6 +19,7 @@ class Config:
     DB_SSL_REQUIRED = _bool("DB_SSL_REQUIRED")
     DB_POOL_SIZE = int(os.environ.get("DB_POOL_SIZE", 10))
     REDIS_URL = os.environ.get("REDIS_URL")
+    BACKUP_DATABASE_URL = os.environ.get("BACKUP_DATABASE_URL")  # read-only account used by mysqldump
 
     # Envelope encryption: KEK_KEYS="v1:<base64 32 bytes>,v2:<...>", KEK_ACTIVE="v2"
     KEK_KEYS = os.environ.get("KEK_KEYS", "")
@@ -33,8 +34,8 @@ class Config:
 
     FRONTEND_URL = os.environ.get("FRONTEND_URL", "http://localhost:3000")
     MEDIA_URL = os.environ.get("MEDIA_URL", "/media")
-    UPLOAD_DIR = os.environ.get("UPLOAD_DIR", os.path.join(os.path.dirname(__file__), "..", "uploads"))
-    BACKUP_DIR = os.environ.get("BACKUP_DIR", os.path.join(os.path.dirname(__file__), "..", "backups"))
+    UPLOAD_DIR = os.environ.get("UPLOAD_DIR") or os.path.join(os.path.dirname(__file__), "..", "uploads")
+    BACKUP_DIR = os.environ.get("BACKUP_DIR") or os.path.join(os.path.dirname(__file__), "..", "backups")
     MAX_UPLOAD_MB = int(os.environ.get("MAX_UPLOAD_MB", 8))
     S3_BUCKET = os.environ.get("S3_BUCKET")
     S3_ENDPOINT_URL = os.environ.get("S3_ENDPOINT_URL")

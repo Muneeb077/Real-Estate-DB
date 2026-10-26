@@ -180,17 +180,17 @@ def seed_history(conn, guests, gina):
 
     bookings, upcoming = [], []
     for lid, host, price, max_guests, rate in stays:
-        day = today - timedelta(days=random.randint(330, 365))
-        for _ in range(random.randint(1, 5)):
-            day += timedelta(days=random.randint(5, 70))
+        # 1-5 stays spread evenly over the past year, never overlapping
+        taken_until = today - timedelta(days=366)
+        for start in sorted(today - timedelta(days=random.randint(3, 360)) for _ in range(random.randint(1, 5))):
             nights = random.randint(2, 7)
-            if day + timedelta(days=nights) >= today:
-                break
+            if start < taken_until or start + timedelta(days=nights) >= today:
+                continue
             sub = float(price) * nights
             fee = round(sub * fee_rate, 2)
-            bookings.append((str(ULID()), lid, random.choice(guests), host, day, day + timedelta(days=nights),
+            bookings.append((str(ULID()), lid, random.choice(guests), host, start, start + timedelta(days=nights),
                              random.randint(1, max_guests), sub, fee, round(sub + fee, 2), float(rate)))
-            day += timedelta(days=nights)
+            taken_until = start + timedelta(days=nights)
     for lid, host, price, max_guests, rate in stays[:40]:
         start = today + timedelta(days=random.randint(5, 60))
         nights = random.randint(2, 5)
@@ -199,23 +199,27 @@ def seed_history(conn, guests, gina):
         upcoming.append((str(ULID()), lid, gina if len(upcoming) < 6 else random.choice(guests), host, start,
                          start + timedelta(days=nights), 1, sub, fee, round(sub + fee, 2), float(rate)))
 
+    def booked_at(row):
+        # when the guest paid: a few days before check-in, never in the future
+        return min(row[4] - timedelta(days=(row[0][-1] in "0123456789ABCDEF") + 2), today - timedelta(days=1))
+
     def insert_bookings(rows, status):
         first = next_id(cur, "bookings")
         cur.executemany(
             f"""INSERT INTO bookings (public_id, listing_id, guest_id, host_id, check_in, check_out, guests,
                                       subtotal, service_fee, total_price, status, created_at)
                 VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, '{status}', %s)""",
-            [r[:10] + (r[4] - timedelta(days=14),) for r in rows])
+            [r[:10] + (booked_at(r),) for r in rows])
         check_ids(cur, "bookings", first, len(rows))
         cur.executemany(
             """INSERT INTO payments (booking_id, provider, provider_ref, amount, created_at)
                VALUES (%s, 'simulated', %s, %s, %s)""",
-            [(first + i, f"sim_seed_{first + i}", r[9], r[4] - timedelta(days=14)) for i, r in enumerate(rows)])
+            [(first + i, f"sim_seed_{first + i}", r[9], booked_at(r)) for i, r in enumerate(rows)])
         cur.executemany(
             """INSERT INTO transactions (kind, listing_id, host_id, guest_id, booking_id, amount, commission,
                                          service_fee, created_at)
                VALUES ('stay', %s, %s, %s, %s, %s, %s, %s, %s)""",
-            [(r[1], r[3], r[2], first + i, r[9], round(r[7] * r[10], 2), r[8], r[4] - timedelta(days=14))
+            [(r[1], r[3], r[2], first + i, r[9], round(r[7] * r[10], 2), r[8], booked_at(r))
              for i, r in enumerate(rows)])
         return first
 

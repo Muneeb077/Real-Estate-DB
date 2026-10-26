@@ -2,6 +2,11 @@
 -- and without private columns. Coordinates are rounded to 3 decimals (~100 m)
 -- so the exact address is never exposed. address_id is kept for spatial joins
 -- inside SearchListings and is never returned by the API.
+--
+-- The cover photo is a JOIN (sort_order 0), not a correlated subquery: subqueries
+-- in a view's select list make MySQL materialise the whole view (TEMPTABLE)
+-- instead of merging it into the outer query, which defeats every index.
+-- Repeatable: re-applied by later migrations when it changes.
 CREATE OR REPLACE SQL SECURITY INVOKER VIEW v_public_listings AS
 SELECT
     l.id,
@@ -21,8 +26,8 @@ SELECT
     a.country,
     ROUND(ST_Latitude(a.location), 3)  AS lat,
     ROUND(ST_Longitude(a.location), 3) AS lng,
-    (SELECT p.url FROM listing_photos p WHERE p.listing_id = l.id ORDER BY p.sort_order, p.id LIMIT 1) AS cover_url,
-    (SELECT p.thumb_url FROM listing_photos p WHERE p.listing_id = l.id ORDER BY p.sort_order, p.id LIMIT 1) AS cover_thumb_url,
+    cp.url AS cover_url,
+    cp.thumb_url AS cover_thumb_url,
     s.rating_avg,
     COALESCE(s.review_count, 0) AS review_count,
     l.published_at,
@@ -31,4 +36,5 @@ SELECT
 FROM listings l
 JOIN addresses a ON a.id = l.address_id
 LEFT JOIN listing_stats s ON s.listing_id = l.id
+LEFT JOIN listing_photos cp ON cp.listing_id = l.id AND cp.sort_order = 0
 WHERE l.status = 'published' AND l.deleted_at IS NULL;
