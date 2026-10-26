@@ -6,6 +6,18 @@ updates:
   - package-ecosystem: npm
     directory: /frontend
     schedule: { interval: weekly }
+    groups:
+      # react and react-dom must always be the same version
+      react:
+        patterns: ["react", "react-dom", "@types/react", "@types/react-dom"]
+      # one PR for routine minor/patch bumps instead of one per package
+      minor-and-patch:
+        update-types: ["minor", "patch"]
+    ignore:
+      # typescript-eslint (via eslint-config-next) supports TypeScript < 6.1 only;
+      # remove once it supports TypeScript 7.
+      - dependency-name: typescript
+        versions: [">=6.1.0"]
   - package-ecosystem: github-actions
     directory: /
     schedule: { interval: monthly }
