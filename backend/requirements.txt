@@ -8,7 +8,7 @@ PyJWT==2.15.1
 Flask-Limiter==4.1.1
 pydantic==2.14.1
 email-validator==2.3.0
-python-ulid==4.0.1
+python-ulid==4.1.0
 python-dotenv==1.2.4
 redis==8.1.0
 rq==2.12.0
