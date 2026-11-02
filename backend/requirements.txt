@@ -11,7 +11,7 @@ email-validator==2.3.0
 python-ulid==4.0.1
 python-dotenv==1.2.4
 redis==8.1.0
-rq==2.12.0
+rq==3.0.0
 pillow==13.0.0
 boto3==1.43.118
 stripe==16.0.0
